@@ -216,22 +216,13 @@ jobs:
 
     - name: Create and push git tag
       if: github.event_name == 'workflow_dispatch'
-      run: |
-        TAG="${{ steps.version.outputs.tag }}"
-
-        # Configure git
-        git config user.name "github-actions[bot]"
-        git config user.email "github-actions[bot]@users.noreply.github.com"
-
-        # Check if tag already exists
-        if git rev-parse "$TAG" >/dev/null 2>&1; then
-          echo "ℹ️ Tag $TAG already exists"
-        else
-          echo "Creating tag $TAG"
-          git tag -a "$TAG" -m "Release ${{ steps.version.outputs.version }}"
-          git push origin "$TAG"
-          echo "✅ Tag $TAG created and pushed"
-        fi
+      uses: rickstaa/action-create-tag@v1
+      with:
+        tag: ${{ steps.version.outputs.tag }}
+        tag_exists_error: false
+        message: "Release ${{ steps.version.outputs.version }}"
+        gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+        gpg_passphrase: ${{ secrets.GPG_PASSPHRASE }}
 
     - name: Create success comment
       if: success()
