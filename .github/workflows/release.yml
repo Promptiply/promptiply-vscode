@@ -98,7 +98,7 @@ jobs:
 
     - name: Run tests
       run: |
-        npm test
+        xvfb-run -a npm test
 
     - name: Run sync tests
       run: |

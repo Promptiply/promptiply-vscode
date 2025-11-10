@@ -59,7 +59,13 @@ jobs:
         run: npm run compile
 
       - name: Run tests
-        run: npm test
+        run: |
+          if [ "$RUNNER_OS" == "Linux" ]; then
+            xvfb-run -a npm test
+          else
+            npm test
+          fi
+        shell: bash
 
       - name: Run sync tests
         run: node test-sync.js
@@ -94,7 +100,11 @@ jobs:
 
     - name: Run tests
       run: |
-        npm test
+        if [ "$RUNNER_OS" == "Linux" ]; then
+          xvfb-run -a npm test
+        else
+          npm test
+        fi
 
     - name: Run sync tests
       run: |
