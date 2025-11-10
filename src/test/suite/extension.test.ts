@@ -28,13 +28,15 @@ suite('Extension Test Suite', () => {
 
         // Activate and wait
         ext.activate()
-            .then(() => {
-                assert.strictEqual(ext.isActive, true, 'Extension should be active after activation');
-                done();
-            })
-            .catch((err) => {
-                done(err);
-            });
+            .then(
+                () => {
+                    assert.strictEqual(ext.isActive, true, 'Extension should be active after activation');
+                    done();
+                },
+                (err: any) => {
+                    done(err);
+                }
+            );
     });
 
     test('Commands should be registered', async () => {
