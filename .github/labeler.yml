@@ -1,0 +1,57 @@
+# PR Labeler Configuration
+# Automatically label PRs based on changed files
+
+# Documentation
+documentation:
+  - changed-files:
+    - any-glob-to-any-file: ['**/*.md', 'docs/**/*']
+
+# Source code
+source:
+  - changed-files:
+    - any-glob-to-any-file: ['src/**/*.ts', 'src/**/*.js']
+
+# Profile system
+profiles:
+  - changed-files:
+    - any-glob-to-any-file: ['src/profiles/**/*']
+
+# Recommendations
+recommendations:
+  - changed-files:
+    - any-glob-to-any-file: ['src/recommendations/**/*']
+
+# Sync functionality
+sync:
+  - changed-files:
+    - any-glob-to-any-file: ['src/sync/**/*']
+
+# Chat integration
+chat:
+  - changed-files:
+    - any-glob-to-any-file: ['src/chat/**/*']
+
+# Tests
+tests:
+  - changed-files:
+    - any-glob-to-any-file: ['**/*.test.ts', '**/*.spec.ts', 'test-*.js', 'test-data/**/*']
+
+# Configuration
+config:
+  - changed-files:
+    - any-glob-to-any-file: ['*.json', '*.yml', '*.yaml', '.github/**/*', 'tsconfig.json', 'webpack.config.js']
+
+# Dependencies
+dependencies:
+  - changed-files:
+    - any-glob-to-any-file: ['package.json', 'package-lock.json']
+
+# GitHub Actions / CI
+ci:
+  - changed-files:
+    - any-glob-to-any-file: ['.github/workflows/**/*']
+
+# Build and packaging
+build:
+  - changed-files:
+    - any-glob-to-any-file: ['webpack.config.js', 'tsconfig.json', '.vscodeignore']

@@ -1,0 +1,243 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag version to release (e.g., v0.5.0)'
+        required: true
+        type: string
+      prerelease:
+        description: 'Is this a pre-release?'
+        required: false
+        type: boolean
+        default: false
+      publish_marketplace:
+        description: 'Publish to VSCode Marketplace?'
+        required: false
+        type: boolean
+        default: true
+      publish_openvsx:
+        description: 'Publish to Open VSX?'
+        required: false
+        type: boolean
+        default: true
+
+# Prevent multiple releases from running simultaneously
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+      with:
+        fetch-depth: 0 
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20.x
+        cache: 'npm'
+
+    - name: Get version information
+      id: version
+      run: |
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          TAG="${{ github.event.inputs.tag }}"
+          VERSION="${TAG#v}"
+          IS_PRERELEASE="${{ github.event.inputs.prerelease }}"
+        else
+          TAG="${GITHUB_REF#refs/tags/}"
+          VERSION="${TAG#v}"
+          IS_PRERELEASE="false"
+
+          if [[ "$TAG" == *"alpha"* ]] || [[ "$TAG" == *"beta"* ]] || [[ "$TAG" == *"rc"* ]]; then
+            IS_PRERELEASE="true"
+          fi
+        fi
+
+        echo "tag=$TAG" >> $GITHUB_OUTPUT
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "is_prerelease=$IS_PRERELEASE" >> $GITHUB_OUTPUT
+        echo "Release tag: $TAG"
+        echo "Version: $VERSION"
+        echo "Pre-release: $IS_PRERELEASE"
+
+    - name: Validate version matches package.json
+      run: |
+        PACKAGE_VERSION=$(node -p "require('./package.json').version")
+
+        if [ "${{ steps.version.outputs.version }}" != "$PACKAGE_VERSION" ]; then
+          echo "Error: Tag version (${{ steps.version.outputs.version }}) does not match package.json version ($PACKAGE_VERSION)"
+          exit 1
+        fi
+
+        echo "Version validation passed: $PACKAGE_VERSION"
+
+    - name: Install dependencies
+      run: |
+        npm ci
+
+    - name: Run linter
+      run: |
+        npm run lint --if-present
+
+    - name: Compile TypeScript
+      run: |
+        npm run compile
+
+    - name: Run tests
+      run: |
+        xvfb-run -a npm test
+
+    - name: Run sync tests
+      run: |
+        node test-sync.js
+
+    - name: Package extension
+      id: package
+      uses: HaaLeo/publish-vscode-extension@v1
+      with:
+        pat: stub  # Not publishing yet, just packaging
+        dryRun: true
+        packagePath: promptiply-${{ steps.version.outputs.version }}.vsix
+
+    - name: Verify VSIX package
+      run: |
+        if [ ! -f "promptiply-${{ steps.version.outputs.version }}.vsix" ]; then
+          echo "Error: VSIX package not found"
+          exit 1
+        fi
+
+        ls -lh promptiply-${{ steps.version.outputs.version }}.vsix
+        echo "✅ Package created successfully"
+
+    - name: Extract changelog for this version
+      id: changelog
+      run: |
+        VERSION="${{ steps.version.outputs.version }}"
+        CHANGELOG=$(awk -v ver="$VERSION" '
+          /^## \[/ {
+            if (found) exit;
+            if ($0 ~ ver) found=1;
+            next;
+          }
+          found { print }
+        ' CHANGELOG.md | sed '/^$/d' | head -n 50)
+
+        if [ -z "$CHANGELOG" ]; then
+          CHANGELOG="See [CHANGELOG.md](CHANGELOG.md) for details."
+        fi
+
+        echo "changelog<<EOF" >> $GITHUB_OUTPUT
+        echo "$CHANGELOG" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+
+    - name: Upload VSIX as artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: promptiply-vsix-${{ steps.version.outputs.version }}
+        path: '*.vsix'
+        retention-days: 90
+        compression-level: 0 
+
+    - name: Generate release notes
+      id: release_notes
+      run: |
+        cat > release_notes.md << 'EOF'
+        ## 📦 Installation
+
+        ### From VSCode Marketplace (Recommended)
+        Search for "Promptiply" in the Extensions view (Ctrl+Shift+X) and click Install.
+
+        ### Manual Installation
+        1. Download the `.vsix` file below
+        2. In VSCode, open Extensions view (Ctrl+Shift+X)
+        3. Click the "..." menu and select "Install from VSIX..."
+        4. Select the downloaded file
+
+        ## 📋 Changes in this Release
+
+        ${{ steps.changelog.outputs.changelog }}
+
+        ## 🔗 Links
+        - [Documentation](https://github.com/Promptiply/promptiply-vscode#readme)
+        - [Sync Integration Guide](https://github.com/Promptiply/promptiply-vscode/blob/main/docs/sync-integration.md)
+        - [Changelog](https://github.com/Promptiply/promptiply-vscode/blob/main/CHANGELOG.md)
+        - [Chrome Extension](https://github.com/Promptiply/promptiply)
+
+        ## 🐛 Found a Bug?
+        [Report it here](https://github.com/Promptiply/promptiply-vscode/issues/new?template=bug_report.yml)
+        EOF
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      id: release
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ steps.version.outputs.tag }}
+        name: Promptiply v${{ steps.version.outputs.version }}
+        body_path: release_notes.md
+        files: '*.vsix'
+        draft: false
+        prerelease: ${{ steps.version.outputs.is_prerelease == 'true' }}
+        generate_release_notes: true
+        make_latest: ${{ steps.version.outputs.is_prerelease == 'false' }}
+
+    - name: Publish to VSCode Marketplace
+      if: |
+        steps.version.outputs.is_prerelease == 'false' &&
+        (github.event_name == 'push' || github.event.inputs.publish_marketplace == 'true')
+      uses: HaaLeo/publish-vscode-extension@v1
+      with:
+        pat: ${{ secrets.VSCE_TOKEN }}
+        registryUrl: https://marketplace.visualstudio.com
+        extensionFile: promptiply-${{ steps.version.outputs.version }}.vsix
+        packagePath: ''  # We already have the VSIX
+      continue-on-error: false
+
+    - name: Publish to Open VSX Registry
+      if: |
+        steps.version.outputs.is_prerelease == 'false' &&
+        (github.event_name == 'push' || github.event.inputs.publish_openvsx == 'true')
+      uses: HaaLeo/publish-vscode-extension@v1
+      with:
+        pat: ${{ secrets.OVSX_TOKEN }}
+        registryUrl: https://open-vsx.org
+        extensionFile: promptiply-${{ steps.version.outputs.version }}.vsix
+        packagePath: ''  # We already have the VSIX
+      continue-on-error: true
+
+    - name: Create and push git tag
+      if: github.event_name == 'workflow_dispatch'
+      uses: mathieudutour/github-tag-action@v6.2
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        custom_tag: ${{ steps.version.outputs.tag }}
+        create_annotated_tag: true
+
+    - name: Create success comment
+      if: success()
+      run: |
+        echo "✅ Release ${{ steps.version.outputs.tag }} completed successfully!"
+        echo "📦 VSIX: promptiply-${{ steps.version.outputs.version }}.vsix"
+        echo "🔗 Release: ${{ steps.release.outputs.url }}"
+        echo "::notice::${{ steps.release.outputs.url }}"
+
+    - name: Notify on failure
+      if: failure()
+      run: |
+        echo "❌ Release ${{ steps.version.outputs.tag }} failed!"
+        echo "Check the logs above for details."
+        exit 1

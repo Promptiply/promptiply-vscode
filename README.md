@@ -2,6 +2,11 @@
 
 Refine your AI prompts for better results with Copilot, Claude Code, Cursor, and more. Transform vague ideas into clear, actionable prompts using customizable profiles with smart topic tracking.
 
+[![CI](https://github.com/Promptiply/promptiply-vscode/actions/workflows/ci.yml/badge.svg)](https://github.com/Promptiply/promptiply-vscode/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/Promptiply/promptiply-vscode/actions/workflows/codeql.yml/badge.svg)](https://github.com/Promptiply/promptiply-vscode/actions/workflows/codeql.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+
 ## ✨ Features
 
 - **💬 AI Chat Integration**: Type `@promptiply` in any VSCode chat to refine prompts instantly!

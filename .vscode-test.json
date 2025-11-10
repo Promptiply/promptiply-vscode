@@ -1,0 +1,5 @@
+{
+  "version": "stable",
+  "extensionDevelopmentPath": ".",
+  "extensionTestsPath": "./out/test/suite/index"
+}
