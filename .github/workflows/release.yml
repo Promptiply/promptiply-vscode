@@ -216,13 +216,12 @@ jobs:
 
     - name: Create and push git tag
       if: github.event_name == 'workflow_dispatch'
-      uses: rickstaa/action-create-tag@v1
+      uses: mathieudutour/github-tag-action@v6.2
       with:
-        tag: ${{ steps.version.outputs.tag }}
-        tag_exists_error: false
-        message: "Release ${{ steps.version.outputs.version }}"
-        gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
-        gpg_passphrase: ${{ secrets.GPG_PASSPHRASE }}
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        custom_tag: ${{ steps.version.outputs.tag }}
+        tag_prefix: ""
+        create_annotated_tag: true
 
     - name: Create success comment
       if: success()
