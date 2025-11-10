@@ -110,17 +110,20 @@ jobs:
       with:
         pat: stub  # Not publishing yet, just packaging
         dryRun: true
-        packagePath: promptiply-${{ steps.version.outputs.version }}.vsix
 
     - name: Verify VSIX package
       run: |
-        if [ ! -f "promptiply-${{ steps.version.outputs.version }}.vsix" ]; then
+        VSIX_FILE=$(ls *.vsix 2>/dev/null | head -n 1)
+
+        if [ -z "$VSIX_FILE" ]; then
           echo "Error: VSIX package not found"
           exit 1
         fi
 
-        ls -lh promptiply-${{ steps.version.outputs.version }}.vsix
-        echo "✅ Package created successfully"
+        ls -lh *.vsix
+        echo "✅ Package created successfully: $VSIX_FILE"
+        echo "vsix_file=$VSIX_FILE" >> $GITHUB_OUTPUT
+      id: vsix
 
     - name: Extract changelog for this version
       id: changelog
@@ -203,8 +206,7 @@ jobs:
       with:
         pat: ${{ secrets.VSCE_TOKEN }}
         registryUrl: https://marketplace.visualstudio.com
-        extensionFile: promptiply-${{ steps.version.outputs.version }}.vsix
-        packagePath: ''  # We already have the VSIX
+        packagePath: ${{ steps.vsix.outputs.vsix_file }}
       continue-on-error: false
 
     - name: Publish to Open VSX Registry
@@ -215,8 +217,7 @@ jobs:
       with:
         pat: ${{ secrets.OVSX_TOKEN }}
         registryUrl: https://open-vsx.org
-        extensionFile: promptiply-${{ steps.version.outputs.version }}.vsix
-        packagePath: ''  # We already have the VSIX
+        packagePath: ${{ steps.vsix.outputs.vsix_file }}
       continue-on-error: true
 
     - name: Create and push git tag
@@ -231,7 +232,7 @@ jobs:
       if: success()
       run: |
         echo "✅ Release ${{ steps.version.outputs.tag }} completed successfully!"
-        echo "📦 VSIX: promptiply-${{ steps.version.outputs.version }}.vsix"
+        echo "📦 VSIX: ${{ steps.vsix.outputs.vsix_file }}"
         echo "🔗 Release: ${{ steps.release.outputs.url }}"
         echo "::notice::${{ steps.release.outputs.url }}"
 
