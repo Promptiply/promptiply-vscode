@@ -1,12 +1,5 @@
 {
   "version": "stable",
-  "mocha": {
-    "ui": "tdd",
-    "timeout": 20000
-  },
-  "files": [
-    {
-      "pattern": "out/test/**/*.test.js"
-    }
-  ]
+  "extensionDevelopmentPath": ".",
+  "extensionTestsPath": "./out/test/suite/index"
 }

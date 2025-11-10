@@ -59,6 +59,9 @@ jobs:
       - name: Compile TypeScript
         run: npm run compile
 
+      - name: Run tests
+        run: npm test
+
       - name: Run sync tests
         run: node test-sync.js
 
@@ -89,6 +92,10 @@ jobs:
     - name: Install dependencies
       run: |
         npm ci
+
+    - name: Run tests
+      run: |
+        npm test
 
     - name: Run sync tests
       run: |
