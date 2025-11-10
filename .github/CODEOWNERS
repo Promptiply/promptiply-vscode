@@ -3,39 +3,39 @@
 # https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
 
 # Default owners for everything in the repo
-* @Promptiply/maintainers
+* @maintainers
 
 # GitHub workflows and configuration
-/.github/ @Promptiply/maintainers
+/.github/ @maintainers
 
 # Core extension files
-/src/extension.ts @Promptiply/maintainers
+/src/extension.ts @maintainers
 
 # Profile system
-/src/profiles/ @Promptiply/maintainers
+/src/profiles/ @maintainers
 
 # Recommendation system
-/src/recommendations/ @Promptiply/maintainers
+/src/recommendations/ @maintainers
 
 # Sync functionality
-/src/sync/ @Promptiply/maintainers
+/src/sync/ @maintainers
 
 # Chat integration
-/src/chat/ @Promptiply/maintainers
+/src/chat/ @maintainers
 
 # Documentation
-/docs/ @Promptiply/maintainers
-*.md @Promptiply/maintainers
+/docs/ @maintainers
+*.md @maintainers
 
 # Configuration files
-package.json @Promptiply/maintainers
-tsconfig.json @Promptiply/maintainers
-webpack.config.js @Promptiply/maintainers
+package.json @maintainers
+tsconfig.json @maintainers
+webpack.config.js @maintainers
 
 # Security
-SECURITY.md @Promptiply/maintainers
-/.github/workflows/codeql.yml @Promptiply/maintainers
+SECURITY.md @maintainers
+/.github/workflows/codeql.yml @maintainers
 
 # Dependencies
-package-lock.json @Promptiply/maintainers
-/.github/dependabot.yml @Promptiply/maintainers
+package-lock.json @maintainers
+/.github/dependabot.yml @maintainers
