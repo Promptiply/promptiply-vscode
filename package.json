@@ -1,0 +1,438 @@
+{
+  "name": "promptiply",
+  "displayName": "Promptiply",
+  "description": "Refine your AI prompts for better results with Copilot, Claude Code, and more. Supports customizable profiles with smart topic tracking.",
+  "version": "0.5.0",
+  "publisher": "promptiply",
+  "icon": "media/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tomronen/promptiply"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Machine Learning",
+    "Other"
+  ],
+  "keywords": [
+    "ai",
+    "prompt",
+    "copilot",
+    "claude",
+    "refinement",
+    "llm",
+    "chatgpt"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "promptiply.refineSelection",
+        "title": "Refine Selection",
+        "category": "Promptiply"
+      },
+      {
+        "command": "promptiply.refineFile",
+        "title": "Refine Entire File",
+        "category": "Promptiply"
+      },
+      {
+        "command": "promptiply.refineFromClipboard",
+        "title": "Refine from Clipboard (for AI Chats)",
+        "category": "Promptiply",
+        "icon": "$(clippy)"
+      },
+      {
+        "command": "promptiply.refineFromInput",
+        "title": "Refine from Input Box",
+        "category": "Promptiply",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "promptiply.switchProfile",
+        "title": "Switch Profile",
+        "category": "Promptiply"
+      },
+      {
+        "command": "promptiply.toggleEconomy",
+        "title": "Toggle Economy/Premium Mode",
+        "category": "Promptiply"
+      },
+      {
+        "command": "promptiply.importProfiles",
+        "title": "Import Profiles from Chrome Extension",
+        "category": "Promptiply"
+      },
+      {
+        "command": "promptiply.exportProfiles",
+        "title": "Export Profiles",
+        "category": "Promptiply"
+      },
+      {
+        "command": "promptiply.openSettings",
+        "title": "Open Settings",
+        "category": "Promptiply"
+      },
+      {
+        "command": "promptiply.createProfile",
+        "title": "Create Profile",
+        "category": "Promptiply",
+        "icon": "$(add)"
+      },
+      {
+        "command": "promptiply.deleteProfile",
+        "title": "Delete Profile",
+        "category": "Promptiply",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "promptiply.viewProfile",
+        "title": "View Active Profile",
+        "category": "Promptiply",
+        "icon": "$(info)"
+      },
+      {
+        "command": "promptiply.installBuiltInProfile",
+        "title": "Install Built-in Profile Template",
+        "category": "Promptiply",
+        "icon": "$(star)"
+      },
+      {
+        "command": "promptiply.resetProfilesToDefaults",
+        "title": "Reset Profiles to Defaults (9 Professional Profiles)",
+        "category": "Promptiply",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "promptiply.useTemplate",
+        "title": "Use Template",
+        "category": "Promptiply",
+        "icon": "$(file-code)"
+      },
+      {
+        "command": "promptiply.createTemplate",
+        "title": "Create Custom Template",
+        "category": "Promptiply",
+        "icon": "$(add)"
+      },
+      {
+        "command": "promptiply.manageTemplates",
+        "title": "Manage Templates",
+        "category": "Promptiply",
+        "icon": "$(settings-gear)"
+      },
+      {
+        "command": "promptiply.importTemplates",
+        "title": "Import Templates",
+        "category": "Promptiply"
+      },
+      {
+        "command": "promptiply.exportTemplates",
+        "title": "Export Templates",
+        "category": "Promptiply"
+      },
+      {
+        "command": "promptiply.showHistory",
+        "title": "Show Refinement History",
+        "category": "Promptiply",
+        "icon": "$(history)"
+      },
+      {
+        "command": "promptiply.clearHistory",
+        "title": "Clear History",
+        "category": "Promptiply",
+        "icon": "$(clear-all)"
+      },
+      {
+        "command": "promptiply.showHistoryEntry",
+        "title": "Show History Entry",
+        "category": "Promptiply"
+      },
+      {
+        "command": "promptiply.deleteHistoryEntry",
+        "title": "Delete Entry",
+        "category": "Promptiply",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "promptiply.refreshHistory",
+        "title": "Refresh History",
+        "category": "Promptiply",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "promptiply.enableSync",
+        "title": "Enable Profile Sync",
+        "category": "Promptiply",
+        "icon": "$(sync)"
+      },
+      {
+        "command": "promptiply.disableSync",
+        "title": "Disable Profile Sync",
+        "category": "Promptiply",
+        "icon": "$(sync-ignored)"
+      },
+      {
+        "command": "promptiply.syncNow",
+        "title": "Sync Profiles Now",
+        "category": "Promptiply",
+        "icon": "$(cloud-download)"
+      },
+      {
+        "command": "promptiply.setSyncPath",
+        "title": "Set Sync File Path",
+        "category": "Promptiply",
+        "icon": "$(file)"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "promptiply.refineSelection",
+        "key": "ctrl+shift+r",
+        "mac": "cmd+shift+r",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "promptiply.refineFromClipboard",
+        "key": "ctrl+shift+alt+r",
+        "mac": "cmd+shift+alt+r"
+      },
+      {
+        "command": "promptiply.refineFromInput",
+        "key": "ctrl+alt+r",
+        "mac": "cmd+alt+r"
+      },
+      {
+        "command": "promptiply.switchProfile",
+        "key": "ctrl+shift+alt+p",
+        "mac": "cmd+shift+alt+p"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "promptiply.refineSelection",
+          "group": "promptiply",
+          "when": "editorHasSelection"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "promptiply.refreshHistory",
+          "when": "view == promptiply.history",
+          "group": "navigation"
+        },
+        {
+          "command": "promptiply.clearHistory",
+          "when": "view == promptiply.history",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "promptiply.deleteHistoryEntry",
+          "when": "view == promptiply.history && viewItem == historyEntry",
+          "group": "inline"
+        }
+      ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "promptiply",
+          "title": "Promptiply",
+          "icon": "media/icon.png"
+        }
+      ]
+    },
+    "views": {
+      "promptiply": [
+        {
+          "id": "promptiply.history",
+          "name": "Refinement History",
+          "icon": "$(history)"
+        }
+      ]
+    },
+    "chatParticipants": [
+      {
+        "id": "promptiply.refine",
+        "name": "promptiply",
+        "description": "Refine your prompts for better AI responses",
+        "isSticky": true,
+        "commands": [
+          {
+            "name": "help",
+            "description": "Show help and usage examples"
+          },
+          {
+            "name": "profile",
+            "description": "Choose a profile to refine with"
+          }
+        ]
+      }
+    ],
+    "configuration": {
+      "title": "Promptiply",
+      "properties": {
+        "promptiply.mode": {
+          "type": "string",
+          "default": "vscode-lm",
+          "enum": [
+            "vscode-lm",
+            "ollama",
+            "openai-api",
+            "anthropic-api"
+          ],
+          "enumDescriptions": [
+            "Use VSCode Language Model API (Copilot subscription)",
+            "Use local Ollama models (free, offline)",
+            "Use OpenAI API (requires API key)",
+            "Use Anthropic API (requires API key)"
+          ],
+          "description": "Refinement mode to use"
+        },
+        "promptiply.useEconomyModel": {
+          "type": "boolean",
+          "default": true,
+          "description": "Use cheaper/faster models when available"
+        },
+        "promptiply.vscodeLM.economyFamily": {
+          "type": "string",
+          "default": "gpt-3.5-turbo",
+          "description": "Economy model family for VSCode LM API"
+        },
+        "promptiply.vscodeLM.premiumFamily": {
+          "type": "string",
+          "default": "gpt-4o",
+          "description": "Premium model family for VSCode LM API"
+        },
+        "promptiply.ollama.endpoint": {
+          "type": "string",
+          "default": "http://localhost:11434",
+          "description": "Ollama API endpoint"
+        },
+        "promptiply.ollama.economyModel": {
+          "type": "string",
+          "default": "llama3.2:3b",
+          "description": "Fast/small Ollama model"
+        },
+        "promptiply.ollama.premiumModel": {
+          "type": "string",
+          "default": "llama3.1:8b",
+          "description": "Better/larger Ollama model"
+        },
+        "promptiply.openai.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "OpenAI API key (stored securely)"
+        },
+        "promptiply.openai.economyModel": {
+          "type": "string",
+          "default": "gpt-5-mini",
+          "description": "OpenAI economy model (GPT-5 Mini)"
+        },
+        "promptiply.openai.premiumModel": {
+          "type": "string",
+          "default": "gpt-5-2025-08-07",
+          "description": "OpenAI premium model (GPT-5)"
+        },
+        "promptiply.anthropic.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "Anthropic API key (stored securely)"
+        },
+        "promptiply.anthropic.economyModel": {
+          "type": "string",
+          "default": "claude-haiku-4-5",
+          "description": "Anthropic economy model"
+        },
+        "promptiply.anthropic.premiumModel": {
+          "type": "string",
+          "default": "claude-sonnet-4-5",
+          "description": "Anthropic premium model"
+        },
+        "promptiply.ui.defaultMode": {
+          "type": "string",
+          "default": "ask",
+          "enum": [
+            "inline",
+            "webview",
+            "diff",
+            "ask"
+          ],
+          "enumDescriptions": [
+            "Replace text inline immediately",
+            "Show in side panel with editing",
+            "Open VSCode diff editor",
+            "Ask each time"
+          ],
+          "description": "How to display refined prompts"
+        },
+        "promptiply.codeLens.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show 'Refine' buttons above prompts"
+        },
+        "promptiply.codeLens.fileTypes": {
+          "type": "array",
+          "default": [
+            "markdown",
+            "plaintext"
+          ],
+          "description": "File types to show CodeLens in"
+        },
+        "promptiply.history.maxEntries": {
+          "type": "number",
+          "default": 100,
+          "description": "Maximum number of history entries to keep"
+        },
+        "promptiply.recommendations.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show AI-powered profile recommendations in chat"
+        },
+        "promptiply.sync.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable automatic profile sync with browser extension"
+        },
+        "promptiply.sync.filePath": {
+          "type": "string",
+          "default": "",
+          "description": "Custom path for profile sync file (leave empty for default: ~/.promptiply-profiles.json)"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run package",
+    "compile": "webpack",
+    "watch": "webpack --watch",
+    "package": "webpack --mode production --devtool hidden-source-map",
+    "compile-tests": "tsc -p . --outDir out",
+    "watch-tests": "tsc -p . -w --outDir out",
+    "pretest": "npm run compile-tests && npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.85.0",
+    "@types/node": "20.x",
+    "@typescript-eslint/eslint-plugin": "^6.15.0",
+    "@typescript-eslint/parser": "^6.15.0",
+    "eslint": "^8.56.0",
+    "typescript": "^5.3.3",
+    "webpack": "^5.89.0",
+    "webpack-cli": "^5.1.4",
+    "ts-loader": "^9.5.1",
+    "@vscode/test-cli": "^0.0.4",
+    "@vscode/test-electron": "^2.3.8"
+  },
+  "dependencies": {}
+}

@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "exportedAt": "2025-01-09T14:00:00.000Z",
+  "profiles": [
+    {
+      "id": "chrome_test_1",
+      "name": "Chrome Test Profile",
+      "persona": "You are a test profile from Chrome extension.",
+      "tone": "professional",
+      "styleGuidelines": [
+        "Test guideline 1",
+        "Test guideline 2"
+      ],
+      "evolving_profile": {
+        "topics": [
+          {
+            "name": "testing",
+            "count": 1,
+            "lastUsed": "2025-01-09T14:00:00.000Z"
+          }
+        ],
+        "lastUpdated": "2025-01-09T14:00:00.000Z",
+        "usageCount": 1,
+        "lastPrompt": "Test prompt"
+      }
+    }
+  ]
+}

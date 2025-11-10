@@ -1,0 +1,335 @@
+/**
+ * Promptiply VSCode Extension
+ * Main entry point
+ */
+
+import * as vscode from 'vscode';
+import { ProfileManager } from './profiles/manager';
+import { RefinementEngine } from './refinement/engine';
+import { RefineCommands } from './commands/refine';
+import { ProfileCommands } from './commands/profiles';
+import { StatusBarManager } from './ui/statusBar';
+import { HistoryManager } from './history/manager';
+import { HistoryTreeViewProvider } from './history/treeViewProvider';
+import { WebviewPanelManager } from './ui/webviewPanel';
+import { TemplateManager } from './templates/manager';
+import { TemplateCommands } from './commands/templates';
+import { PromptiplyChat, registerChatCommands } from './chat/participant';
+import { ProfileSyncManager } from './profiles/sync';
+import { RecommendationLearning } from './profiles/recommendationLearning';
+import { SyncStatusBarManager } from './ui/syncStatusBar';
+
+let statusBarManager: StatusBarManager | undefined;
+let historyTreeView: HistoryTreeViewProvider | undefined;
+let syncManager: ProfileSyncManager | undefined;
+let syncStatusBar: SyncStatusBarManager | undefined;
+
+/**
+ * Extension activation
+ */
+export async function activate(context: vscode.ExtensionContext) {
+  console.log('Promptiply extension is now active');
+
+  // Initialize managers
+  const profileManager = new ProfileManager(context);
+  const historyManager = new HistoryManager(context);
+  const templateManager = new TemplateManager(context);
+  const engine = new RefinementEngine(profileManager);
+
+  // Initialize commands
+  const refineCommands = new RefineCommands(engine, profileManager, historyManager);
+  const profileCommands = new ProfileCommands(profileManager);
+  const templateCommands = new TemplateCommands(templateManager, refineCommands);
+
+  // Initialize webview panel manager
+  WebviewPanelManager.initialize(context);
+
+  // Initialize status bar
+  statusBarManager = new StatusBarManager(profileManager);
+  await statusBarManager.initialize();
+  context.subscriptions.push(statusBarManager);
+
+  // Initialize history tree view
+  historyTreeView = new HistoryTreeViewProvider(historyManager);
+  context.subscriptions.push(
+    vscode.window.registerTreeDataProvider('promptiply.history', historyTreeView)
+  );
+
+  // Initialize chat participant (for in-chat refinement)
+  const chatParticipant = new PromptiplyChat(engine, profileManager, historyManager);
+  context.subscriptions.push(chatParticipant.register());
+  registerChatCommands(context, engine, profileManager, historyManager);
+
+  // Initialize profile sync manager
+  syncManager = new ProfileSyncManager(context, profileManager);
+
+  // Initialize sync status bar
+  syncStatusBar = new SyncStatusBarManager(syncManager);
+  await syncStatusBar.initialize();
+  context.subscriptions.push(syncStatusBar);
+
+  // Connect sync manager with status bar for real-time updates
+  syncManager.setStatusBarManager(syncStatusBar);
+
+  // Enable sync if configured
+  const syncConfig = vscode.workspace.getConfiguration('promptiply');
+  if (syncConfig.get<boolean>('sync.enabled', false)) {
+    await syncManager.enableSync();
+    await syncStatusBar.updateStatus();
+  }
+
+  // Initialize recommendation learning system
+  await RecommendationLearning.initialize(context);
+
+  // Register commands
+  context.subscriptions.push(
+    // Refinement commands
+    vscode.commands.registerCommand(
+      'promptiply.refineSelection',
+      () => refineCommands.refineSelection()
+    ),
+    vscode.commands.registerCommand(
+      'promptiply.refineFile',
+      () => refineCommands.refineFile()
+    ),
+    vscode.commands.registerCommand(
+      'promptiply.refineFromClipboard',
+      () => refineCommands.refineFromClipboard()
+    ),
+    vscode.commands.registerCommand(
+      'promptiply.refineFromInput',
+      () => refineCommands.refineFromInput()
+    ),
+
+    // Profile commands
+    vscode.commands.registerCommand(
+      'promptiply.switchProfile',
+      async () => {
+        await profileCommands.switchProfile();
+        await statusBarManager?.update();
+      }
+    ),
+    vscode.commands.registerCommand(
+      'promptiply.importProfiles',
+      () => profileCommands.importProfiles()
+    ),
+    vscode.commands.registerCommand(
+      'promptiply.exportProfiles',
+      () => profileCommands.exportProfiles()
+    ),
+    vscode.commands.registerCommand(
+      'promptiply.createProfile',
+      async () => {
+        await profileCommands.createProfile();
+        await statusBarManager?.update();
+      }
+    ),
+    vscode.commands.registerCommand(
+      'promptiply.deleteProfile',
+      async () => {
+        await profileCommands.deleteProfile();
+        await statusBarManager?.update();
+      }
+    ),
+    vscode.commands.registerCommand(
+      'promptiply.viewProfile',
+      () => profileCommands.viewProfile()
+    ),
+    vscode.commands.registerCommand(
+      'promptiply.installBuiltInProfile',
+      async () => {
+        await profileCommands.installBuiltInProfile();
+        await statusBarManager?.update();
+      }
+    ),
+    vscode.commands.registerCommand(
+      'promptiply.resetProfilesToDefaults',
+      async () => {
+        await profileCommands.resetToDefaults();
+        await statusBarManager?.update();
+      }
+    ),
+
+    // Template commands
+    vscode.commands.registerCommand(
+      'promptiply.useTemplate',
+      () => templateCommands.useTemplate()
+    ),
+    vscode.commands.registerCommand(
+      'promptiply.createTemplate',
+      () => templateCommands.createTemplate()
+    ),
+    vscode.commands.registerCommand(
+      'promptiply.manageTemplates',
+      () => templateCommands.manageTemplates()
+    ),
+    vscode.commands.registerCommand(
+      'promptiply.importTemplates',
+      () => templateCommands.importTemplates()
+    ),
+    vscode.commands.registerCommand(
+      'promptiply.exportTemplates',
+      () => templateCommands.exportTemplates()
+    ),
+
+    // History commands
+    vscode.commands.registerCommand(
+      'promptiply.showHistory',
+      () => vscode.commands.executeCommand('promptiply.history.focus')
+    ),
+    vscode.commands.registerCommand(
+      'promptiply.clearHistory',
+      async () => {
+        const confirm = await vscode.window.showWarningMessage(
+          'Clear all refinement history?',
+          'Clear',
+          'Cancel'
+        );
+        if (confirm === 'Clear') {
+          await historyManager.clear();
+          historyTreeView?.refresh();
+          vscode.window.showInformationMessage('History cleared');
+        }
+      }
+    ),
+    vscode.commands.registerCommand(
+      'promptiply.showHistoryEntry',
+      (entry) => {
+        WebviewPanelManager.showHistoryEntry(entry);
+      }
+    ),
+    vscode.commands.registerCommand(
+      'promptiply.deleteHistoryEntry',
+      async (item) => {
+        await historyManager.deleteById(item.entry.id);
+        historyTreeView?.refresh();
+        vscode.window.showInformationMessage('History entry deleted');
+      }
+    ),
+    vscode.commands.registerCommand(
+      'promptiply.refreshHistory',
+      () => historyTreeView?.refresh()
+    ),
+
+    // Sync commands
+    vscode.commands.registerCommand(
+      'promptiply.enableSync',
+      async () => {
+        if (syncManager && syncStatusBar) {
+          syncStatusBar.setSyncing();
+          await syncManager.enableSync();
+          const config = vscode.workspace.getConfiguration('promptiply');
+          await config.update('sync.enabled', true, vscode.ConfigurationTarget.Global);
+          syncStatusBar.setSynced();
+          syncStatusBar.show();
+          vscode.window.showInformationMessage('✅ Profile sync enabled');
+        }
+      }
+    ),
+    vscode.commands.registerCommand(
+      'promptiply.disableSync',
+      async () => {
+        if (syncManager && syncStatusBar) {
+          await syncManager.disableSync();
+          const config = vscode.workspace.getConfiguration('promptiply');
+          await config.update('sync.enabled', false, vscode.ConfigurationTarget.Global);
+          syncStatusBar.hide();
+          vscode.window.showInformationMessage('Profile sync disabled');
+        }
+      }
+    ),
+    vscode.commands.registerCommand(
+      'promptiply.syncNow',
+      async () => {
+        if (syncManager && syncStatusBar) {
+          try {
+            syncStatusBar.setSyncing();
+            await syncManager.syncNow();
+            syncStatusBar.setSynced();
+            vscode.window.showInformationMessage('✅ Profiles synced successfully');
+          } catch (error) {
+            syncStatusBar.setError('Sync failed');
+          }
+        }
+      }
+    ),
+    vscode.commands.registerCommand(
+      'promptiply.setSyncPath',
+      async () => {
+        if (syncManager) {
+          const currentPath = syncManager.getSyncFilePath();
+          const newPath = await vscode.window.showInputBox({
+            prompt: 'Enter sync file path',
+            value: currentPath,
+            placeHolder: '~/.promptiply-profiles.json',
+          });
+
+          if (newPath) {
+            await syncManager.setSyncFilePath(newPath);
+          }
+        }
+      }
+    ),
+
+    // Settings commands
+    vscode.commands.registerCommand(
+      'promptiply.toggleEconomy',
+      async () => {
+        const config = vscode.workspace.getConfiguration('promptiply');
+        const current = config.get('useEconomyModel', true);
+        await config.update(
+          'useEconomyModel',
+          !current,
+          vscode.ConfigurationTarget.Global
+        );
+        await statusBarManager?.update();
+        vscode.window.showInformationMessage(
+          `Switched to ${!current ? 'Economy' : 'Premium'} mode`
+        );
+      }
+    ),
+    vscode.commands.registerCommand(
+      'promptiply.openSettings',
+      () => {
+        vscode.commands.executeCommand(
+          'workbench.action.openSettings',
+          'promptiply'
+        );
+      }
+    )
+  );
+
+  // Watch for configuration changes
+  context.subscriptions.push(
+    vscode.workspace.onDidChangeConfiguration(async (e) => {
+      if (e.affectsConfiguration('promptiply')) {
+        await statusBarManager?.update();
+      }
+    })
+  );
+
+  // Show welcome message on first install
+  const hasShownWelcome = context.globalState.get('hasShownWelcome', false);
+  if (!hasShownWelcome) {
+    const action = await vscode.window.showInformationMessage(
+      'Welcome to Promptiply! Refine your AI prompts for better results.',
+      'View Settings',
+      'Switch Profile'
+    );
+
+    if (action === 'View Settings') {
+      vscode.commands.executeCommand('promptiply.openSettings');
+    } else if (action === 'Switch Profile') {
+      vscode.commands.executeCommand('promptiply.switchProfile');
+    }
+
+    await context.globalState.update('hasShownWelcome', true);
+  }
+}
+
+/**
+ * Extension deactivation
+ */
+export function deactivate() {
+  console.log('Promptiply extension is now deactivated');
+}

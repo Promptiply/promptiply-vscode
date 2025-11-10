@@ -1,0 +1,9 @@
+{
+  "activeProfileId": "test_id",
+  "profiles": [
+    {
+      "id": "test",
+      "name": "Test"
+    }
+  ]
+}
