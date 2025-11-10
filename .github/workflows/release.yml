@@ -106,7 +106,7 @@ jobs:
 
     - name: Package extension
       id: package
-      uses: HaaLeo/publish-vscode-extension@v1
+      uses: HaaLeo/publish-vscode-extension@v2
       with:
         pat: stub  # Not publishing yet, just packaging
         dryRun: true
@@ -202,7 +202,7 @@ jobs:
       if: |
         steps.version.outputs.is_prerelease == 'false' &&
         (github.event_name == 'push' || github.event.inputs.publish_marketplace == 'true')
-      uses: HaaLeo/publish-vscode-extension@v1
+      uses: HaaLeo/publish-vscode-extension@v2
       with:
         pat: ${{ secrets.VSCE_TOKEN }}
         registryUrl: https://marketplace.visualstudio.com
@@ -213,7 +213,7 @@ jobs:
       if: |
         steps.version.outputs.is_prerelease == 'false' &&
         (github.event_name == 'push' || github.event.inputs.publish_openvsx == 'true')
-      uses: HaaLeo/publish-vscode-extension@v1
+      uses: HaaLeo/publish-vscode-extension@v2
       with:
         pat: ${{ secrets.OVSX_TOKEN }}
         registryUrl: https://open-vsx.org
