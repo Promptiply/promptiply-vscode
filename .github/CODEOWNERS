@@ -1,0 +1,41 @@
+# CODEOWNERS
+# Code owners are automatically requested for review when someone opens a PR that modifies code that they own.
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default owners for everything in the repo
+* @Promptiply/maintainers
+
+# GitHub workflows and configuration
+/.github/ @Promptiply/maintainers
+
+# Core extension files
+/src/extension.ts @Promptiply/maintainers
+
+# Profile system
+/src/profiles/ @Promptiply/maintainers
+
+# Recommendation system
+/src/recommendations/ @Promptiply/maintainers
+
+# Sync functionality
+/src/sync/ @Promptiply/maintainers
+
+# Chat integration
+/src/chat/ @Promptiply/maintainers
+
+# Documentation
+/docs/ @Promptiply/maintainers
+*.md @Promptiply/maintainers
+
+# Configuration files
+package.json @Promptiply/maintainers
+tsconfig.json @Promptiply/maintainers
+webpack.config.js @Promptiply/maintainers
+
+# Security
+SECURITY.md @Promptiply/maintainers
+/.github/workflows/codeql.yml @Promptiply/maintainers
+
+# Dependencies
+package-lock.json @Promptiply/maintainers
+/.github/dependabot.yml @Promptiply/maintainers

@@ -1,0 +1,34 @@
+name: Dependency Review
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  dependency-review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v4
+        with:
+          # Fail on critical and high vulnerabilities
+          fail-on-severity: moderate
+          # Warn on all license issues
+          warn-on-licenses: true
+          # Comment on PR with findings
+          comment-summary-in-pr: always
+          # Deny licenses (if needed)
+          # deny-licenses: GPL-3.0, AGPL-3.0
+          # Allow licenses
+          allow-licenses: MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC
+          # Enable GHSA advisories
+          allow-ghsas: ""
