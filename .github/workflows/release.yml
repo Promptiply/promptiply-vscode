@@ -100,8 +100,12 @@ jobs:
         node test-sync.js
 
     - name: Package extension
-      run: |
-        npx @vscode/vsce package --out promptiply-${{ steps.version.outputs.version }}.vsix
+      id: package
+      uses: HaaLeo/publish-vscode-extension@v1
+      with:
+        pat: stub  # Not publishing yet, just packaging
+        dryRun: true
+        packagePath: promptiply-${{ steps.version.outputs.version }}.vsix
 
     - name: Verify VSIX package
       run: |
@@ -111,6 +115,7 @@ jobs:
         fi
 
         ls -lh promptiply-${{ steps.version.outputs.version }}.vsix
+        echo "✅ Package created successfully"
 
     - name: Extract changelog for this version
       id: changelog
@@ -189,18 +194,24 @@ jobs:
       if: |
         steps.version.outputs.is_prerelease == 'false' &&
         (github.event_name == 'push' || github.event.inputs.publish_marketplace == 'true')
-      run: |
-        echo "Publishing to VSCode Marketplace..."
-        npx @vscode/vsce publish -p ${{ secrets.VSCE_TOKEN }} --packagePath promptiply-${{ steps.version.outputs.version }}.vsix
+      uses: HaaLeo/publish-vscode-extension@v1
+      with:
+        pat: ${{ secrets.VSCE_TOKEN }}
+        registryUrl: https://marketplace.visualstudio.com
+        extensionFile: promptiply-${{ steps.version.outputs.version }}.vsix
+        packagePath: ''  # We already have the VSIX
       continue-on-error: false
 
     - name: Publish to Open VSX Registry
       if: |
         steps.version.outputs.is_prerelease == 'false' &&
         (github.event_name == 'push' || github.event.inputs.publish_openvsx == 'true')
-      run: |
-        echo "Publishing to Open VSX Registry..."
-        npx ovsx publish promptiply-${{ steps.version.outputs.version }}.vsix -p ${{ secrets.OVSX_TOKEN }}
+      uses: HaaLeo/publish-vscode-extension@v1
+      with:
+        pat: ${{ secrets.OVSX_TOKEN }}
+        registryUrl: https://open-vsx.org
+        extensionFile: promptiply-${{ steps.version.outputs.version }}.vsix
+        packagePath: ''  # We already have the VSIX
       continue-on-error: true
 
     - name: Create success comment
