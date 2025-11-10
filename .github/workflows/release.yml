@@ -32,19 +32,17 @@ jobs:
     permissions:
       contents: write
       id-token: write
-
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       with:
-        fetch-depth: 0  # Fetch all history for changelog generation
+        fetch-depth: 0 
 
     - name: Setup Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v6
       with:
         node-version: 20.x
         cache: 'npm'
-        registry-url: 'https://registry.npmjs.org'
 
     - name: Get version information
       id: version
@@ -57,10 +55,12 @@ jobs:
           TAG="${GITHUB_REF#refs/tags/}"
           VERSION="${TAG#v}"
           IS_PRERELEASE="false"
+
           if [[ "$TAG" == *"alpha"* ]] || [[ "$TAG" == *"beta"* ]] || [[ "$TAG" == *"rc"* ]]; then
             IS_PRERELEASE="true"
           fi
         fi
+
         echo "tag=$TAG" >> $GITHUB_OUTPUT
         echo "version=$VERSION" >> $GITHUB_OUTPUT
         echo "is_prerelease=$IS_PRERELEASE" >> $GITHUB_OUTPUT
@@ -71,29 +71,37 @@ jobs:
     - name: Validate version matches package.json
       run: |
         PACKAGE_VERSION=$(node -p "require('./package.json').version")
+
         if [ "${{ steps.version.outputs.version }}" != "$PACKAGE_VERSION" ]; then
           echo "Error: Tag version (${{ steps.version.outputs.version }}) does not match package.json version ($PACKAGE_VERSION)"
           exit 1
         fi
+
         echo "Version validation passed: $PACKAGE_VERSION"
 
     - name: Install dependencies
-      run: npm ci
+      run: |
+        npm ci
 
     - name: Run linter
-      run: npm run lint --if-present
+      run: |
+        npm run lint --if-present
 
     - name: Compile TypeScript
-      run: npm run compile
+      run: |
+        npm run compile
 
     - name: Run unit tests
-      run: npm test
+      run: |
+        npm test
 
     - name: Run sync tests
-      run: node test-sync.js
+      run: |
+        node test-sync.js
 
     - name: Package extension
-      run: npx @vscode/vsce package --out promptiply-${{ steps.version.outputs.version }}.vsix
+      run: |
+        npx @vscode/vsce package --out promptiply-${{ steps.version.outputs.version }}.vsix
 
     - name: Verify VSIX package
       run: |
@@ -101,6 +109,7 @@ jobs:
           echo "Error: VSIX package not found"
           exit 1
         fi
+
         ls -lh promptiply-${{ steps.version.outputs.version }}.vsix
 
     - name: Extract changelog for this version
@@ -130,7 +139,7 @@ jobs:
         name: promptiply-vsix-${{ steps.version.outputs.version }}
         path: '*.vsix'
         retention-days: 90
-        compression-level: 0  # VSIX is already compressed
+        compression-level: 0 
 
     - name: Generate release notes
       id: release_notes
@@ -163,6 +172,9 @@ jobs:
 
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v2
+      id: release
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         tag_name: ${{ steps.version.outputs.tag }}
         name: Promptiply v${{ steps.version.outputs.version }}
@@ -172,8 +184,6 @@ jobs:
         prerelease: ${{ steps.version.outputs.is_prerelease == 'true' }}
         generate_release_notes: true
         make_latest: ${{ steps.version.outputs.is_prerelease == 'false' }}
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Publish to VSCode Marketplace
       if: |
@@ -198,7 +208,8 @@ jobs:
       run: |
         echo "✅ Release ${{ steps.version.outputs.tag }} completed successfully!"
         echo "📦 VSIX: promptiply-${{ steps.version.outputs.version }}.vsix"
-        echo "🔗 Release: https://github.com/${{ github.repository }}/releases/tag/${{ steps.version.outputs.tag }}"
+        echo "🔗 Release: ${{ steps.release.outputs.url }}"
+        echo "::notice::${{ steps.release.outputs.url }}"
 
     - name: Notify on failure
       if: failure()
