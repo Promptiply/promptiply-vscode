@@ -5,15 +5,26 @@
   "version": "0.5.0",
   "publisher": "promptiply",
   "icon": "media/icon.png",
+  "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/tomronen/promptiply"
+    "url": "https://github.com/Promptiply/promptiply-vscode.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Promptiply/promptiply-vscode/issues"
+  },
+  "homepage": "https://github.com/Promptiply/promptiply-vscode#readme",
+  "galleryBanner": {
+    "color": "#1e1e1e",
+    "theme": "dark"
   },
   "engines": {
     "vscode": "^1.85.0"
   },
   "categories": [
     "Machine Learning",
+    "Programming Languages",
+    "Formatters",
     "Other"
   ],
   "keywords": [
@@ -21,9 +32,18 @@
     "prompt",
     "copilot",
     "claude",
+    "cursor",
     "refinement",
     "llm",
-    "chatgpt"
+    "chatgpt",
+    "gpt",
+    "anthropic",
+    "ollama",
+    "prompt-engineering",
+    "productivity",
+    "chat",
+    "assistant",
+    "vscode-lm"
   ],
   "activationEvents": [
     "onStartupFinished"
