@@ -4,4 +4,3 @@ dist
 *.vsix
 .vscode-test
 .vscode-test-web
-MARKETPLACE.md
