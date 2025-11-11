@@ -108,8 +108,8 @@ Open Settings (`Cmd/Ctrl+,`) and search for "Promptiply":
 
   // Anthropic API settings (pay-per-use)
   "promptiply.anthropic.apiKey": "sk-ant-...",  // Get from https://console.anthropic.com/
-  "promptiply.anthropic.economyModel": "claude-3-5-haiku-20241022",  // ~$1/1M tokens
-  "promptiply.anthropic.premiumModel": "claude-3-5-sonnet-20241022", // ~$3/1M tokens
+  "promptiply.anthropic.economyModel": "claude-4-5-haiku-20251001",  // ~$1/1M tokens
+  "promptiply.anthropic.premiumModel": "claude-4-5-sonnet-20250929", // ~$3/1M tokens
 
   // UI preferences
   "promptiply.ui.defaultMode": "ask", // "inline", "webview", "diff", or "ask"
