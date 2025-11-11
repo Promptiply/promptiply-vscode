@@ -258,8 +258,8 @@ export class RefinementEngine {
       },
       anthropic: {
         apiKey: config.get('anthropic.apiKey', ''),
-        economyModel: config.get('anthropic.economyModel', 'claude-haiku-4-5'),
-        premiumModel: config.get('anthropic.premiumModel', 'claude-sonnet-4-5'),
+        economyModel: config.get('anthropic.economyModel', 'claude-3-5-haiku-20241022'),
+        premiumModel: config.get('anthropic.premiumModel', 'claude-3-5-sonnet-20241022'),
       },
     };
   }

@@ -349,12 +349,12 @@
         },
         "promptiply.anthropic.economyModel": {
           "type": "string",
-          "default": "claude-haiku-4-5",
+          "default": "claude-3-5-haiku-20241022",
           "description": "Anthropic economy model"
         },
         "promptiply.anthropic.premiumModel": {
           "type": "string",
-          "default": "claude-sonnet-4-5",
+          "default": "claude-3-5-sonnet-20241022",
           "description": "Anthropic premium model"
         },
         "promptiply.ui.defaultMode": {
