@@ -1,11 +1,42 @@
 # Promptiply for VSCode
 
-Refine your AI prompts for better results with Copilot, Claude Code, Cursor, and more. Transform vague ideas into clear, actionable prompts using customizable profiles with smart topic tracking.
+<p align="center">
+  <strong>Refine your AI prompts for better results with Copilot, Claude Code, Cursor, and more.</strong>
+  <br>
+  Transform vague ideas into clear, actionable prompts using customizable profiles with smart topic tracking.
+</p>
 
-[![CI](https://github.com/Promptiply/promptiply-vscode/actions/workflows/ci.yml/badge.svg)](https://github.com/Promptiply/promptiply-vscode/actions/workflows/ci.yml)
-[![CodeQL](https://github.com/Promptiply/promptiply-vscode/actions/workflows/codeql.yml/badge.svg)](https://github.com/Promptiply/promptiply-vscode/actions/workflows/codeql.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+<p align="center">
+  <a href="https://github.com/Promptiply/promptiply-vscode/actions/workflows/ci.yml"><img src="https://github.com/Promptiply/promptiply-vscode/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/Promptiply/promptiply-vscode/actions/workflows/codeql.yml"><img src="https://github.com/Promptiply/promptiply-vscode/actions/workflows/codeql.yml/badge.svg" alt="CodeQL"></a>
+  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
+  <a href="CONTRIBUTING.md"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs Welcome"></a>
+  <a href="https://marketplace.visualstudio.com/items?itemName=promptiply.promptiply"><img src="https://img.shields.io/visual-studio-marketplace/v/promptiply.promptiply?label=VS%20Code%20Marketplace" alt="VS Code Marketplace"></a>
+  <a href="https://marketplace.visualstudio.com/items?itemName=promptiply.promptiply"><img src="https://img.shields.io/visual-studio-marketplace/i/promptiply.promptiply" alt="Installs"></a>
+</p>
+
+---
+
+## 📑 Table of Contents
+
+- [Features](#-features)
+- [Quick Start](#-quick-start)
+  - [For File/Editor Work](#for-fileeditor-work)
+  - [For AI Chat Integration](#-for-ai-chat-integration-new)
+- [Screenshots](#-screenshots)
+- [Requirements](#-requirements)
+- [Installation](#-installation)
+- [Configuration](#️-configuration)
+- [Commands](#-commands)
+- [Profiles](#-profiles)
+- [Usage Examples](#-usage-examples)
+- [Import from Chrome Extension](#-import-from-chrome-extension)
+- [Troubleshooting](#-troubleshooting)
+- [Documentation](#-documentation)
+- [Contributing](#-contributing)
+- [License](#-license)
+
+---
 
 ## ✨ Features
 
@@ -61,6 +92,33 @@ Refine your AI prompts for better results with Copilot, Claude Code, Cursor, and
 - ⚡ Super fast workflow with chat participant: Just type `@promptiply`!
 - 🎯 Same powerful profile system and topic tracking
 - 📋 One-click copy buttons in chat responses
+
+## 📥 Installation
+
+### From VSCode Marketplace (Recommended)
+
+1. Open VSCode
+2. Press `Ctrl+Shift+X` (or `Cmd+Shift+X` on Mac) to open Extensions view
+3. Search for "Promptiply"
+4. Click "Install"
+
+### From VSIX File
+
+1. Download the latest `.vsix` file from [Releases](https://github.com/Promptiply/promptiply-vscode/releases)
+2. Open VSCode
+3. Press `Ctrl+Shift+P` (or `Cmd+Shift+P` on Mac)
+4. Type "Extensions: Install from VSIX"
+5. Select the downloaded `.vsix` file
+
+### From Source
+
+```bash
+git clone https://github.com/Promptiply/promptiply-vscode.git
+cd promptiply-vscode
+npm install
+npm run compile
+# Press F5 in VSCode to run in debug mode
+```
 
 ## 📋 Requirements
 
@@ -250,6 +308,19 @@ Include measurable improvements (load time, FCP, TTI) for each optimization.
 
 **Result:** You get much better, more specific answers from your AI assistant! 🎯
 
+## 📸 Screenshots
+
+### Extension in Action
+> Add screenshots here showing the extension's UI, refinement process, and results
+
+### Chat Integration
+> Add screenshots of `@promptiply` being used in VSCode chat
+
+### Profile Management
+> Add screenshots of profile switching and customization
+
+*Note: Screenshots will be added in a future update*
+
 ## 🔄 Import from Chrome Extension
 
 If you're using the Promptiply Chrome extension:
@@ -288,13 +359,27 @@ If you're using the Promptiply Chrome extension:
 - Check if the model supports JSON output
 - For Ollama: use a larger model (8b instead of 3b)
 
+## 📚 Documentation
+
+- [User Guide](docs/USER_GUIDE.md) - Comprehensive guide for end users
+- [API Documentation](docs/API.md) - For developers building on Promptiply
+- [Architecture](docs/ARCHITECTURE.md) - Technical architecture and design decisions
+- [Contributing Guide](CONTRIBUTING.md) - How to contribute to this project
+- [Changelog](CHANGELOG.md) - Version history and changes
+
 ## 🤝 Contributing
 
 This is an open-source project! Contributions are welcome.
 
-**Repository:** https://github.com/tomronen/promptiply
+See our [Contributing Guide](CONTRIBUTING.md) for details on:
+- Code of Conduct
+- Development setup
+- Pull request process
+- Coding standards
 
-**Issues:** Report bugs or request features on GitHub
+**Repository:** https://github.com/Promptiply/promptiply-vscode
+
+**Issues:** Report bugs or request features on [GitHub Issues](https://github.com/Promptiply/promptiply-vscode/issues)
 
 ## 📄 License
 
