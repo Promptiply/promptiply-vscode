@@ -298,7 +298,7 @@ This is an open-source project! Contributions are welcome.
 
 ## 📄 License
 
-MIT License - see LICENSE file for details
+GNU General Public License v3.0 - see [LICENSE](LICENSE) file for details
 
 ## 🙏 Credits
 
