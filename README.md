@@ -18,7 +18,7 @@ Refine your AI prompts for better results with Copilot, Claude Code, Cursor, and
   - **VSCode LM API** - Uses your Copilot subscription (FREE!)
   - **Ollama** - Local models (FREE & Private)
   - **OpenAI API** - Direct access to GPT-5, GPT-5 Mini (pay-per-use)
-  - **Anthropic API** - Direct access to Claude 3.5 Sonnet/Haiku (pay-per-use)
+  - **Anthropic API** - Direct access to Claude 4.5 Sonnet/Haiku (pay-per-use)
 - **🎯 Flexible UI**: Inline replacement, diff view, or side panel
 - **⌨️ Keyboard Shortcuts**: Fast refinement with `Ctrl+Shift+R`
 - **🔄 Import/Export**: Share profiles across devices or with your team
