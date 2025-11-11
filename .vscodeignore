@@ -1,11 +1,41 @@
+# Development files
 .vscode/**
 .vscode-test/**
+.vscode-test-web/**
 src/**
+out/test/**
+
+# Build and config files
 .gitignore
+.git/**
+.gitattributes
 .yarnrc
 webpack.config.js
 **/tsconfig.json
 **/.eslintrc.json
 **/*.map
 **/*.ts
+
+# CI/CD files
+.github/**
+.editorconfig
+
+# Documentation (not needed in package)
+docs/**
+**/*.md
+!README.md
+!CHANGELOG.md
+!LICENSE
+
+# Test files
+**/*.test.js
+test-sync.js
+
+# Dependencies
 node_modules/**
+.npm/**
+
+# Misc
+.DS_Store
+*.log
+*.vsix
