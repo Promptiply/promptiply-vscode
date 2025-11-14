@@ -3,6 +3,7 @@
  */
 
 import { RefinementResult } from '../../profiles/types';
+import Logger from '../../utils/logger';
 
 export interface OpenAIConfig {
   apiKey: string;
@@ -109,7 +110,7 @@ export async function refineWithOpenAI(
 
     // Log token usage if available
     if (data.usage) {
-      console.log(`OpenAI tokens used: ${data.usage.total_tokens} (prompt: ${data.usage.prompt_tokens}, completion: ${data.usage.completion_tokens})`);
+      Logger.debug(`OpenAI tokens used: ${data.usage.total_tokens} (prompt: ${data.usage.prompt_tokens}, completion: ${data.usage.completion_tokens})`);
     }
 
     return result;

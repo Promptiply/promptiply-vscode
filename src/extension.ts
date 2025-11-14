@@ -18,6 +18,7 @@ import { PromptiplyChat, registerChatCommands } from './chat/participant';
 import { ProfileSyncManager } from './profiles/sync';
 import { RecommendationLearning } from './profiles/recommendationLearning';
 import { SyncStatusBarManager } from './ui/syncStatusBar';
+import Logger from './utils/logger';
 
 let statusBarManager: StatusBarManager | undefined;
 let historyTreeView: HistoryTreeViewProvider | undefined;
@@ -28,6 +29,9 @@ let syncStatusBar: SyncStatusBarManager | undefined;
  * Extension activation
  */
 export async function activate(context: vscode.ExtensionContext) {
+  // Initialize logger
+  Logger.initialize();
+
   // Initialize managers
   const profileManager = new ProfileManager(context);
   const historyManager = new HistoryManager(context);
@@ -329,5 +333,8 @@ export async function activate(context: vscode.ExtensionContext) {
  * Extension deactivation
  */
 export function deactivate() {
+  // Dispose logger
+  Logger.dispose();
+
   // Cleanup handled automatically by VSCode subscriptions
 }
