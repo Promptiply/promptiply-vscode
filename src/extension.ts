@@ -80,6 +80,52 @@ async function loadSyncManager() {
 }
 
 /**
+ * Show mode selector menu
+ */
+async function showModeSelector() {
+  const config = vscode.workspace.getConfiguration('promptiply');
+  const currentMode = config.get<string>('mode', 'vscode-lm');
+
+  const modes = [
+    {
+      label: '$(copilot) VSCode LM (Copilot)',
+      description: 'Free - Uses GitHub Copilot',
+      detail: currentMode === 'vscode-lm' ? '✓ Currently selected' : 'Requires GitHub Copilot subscription',
+      mode: 'vscode-lm'
+    },
+    {
+      label: '$(server) Ollama',
+      description: 'Free - Local AI models',
+      detail: currentMode === 'ollama' ? '✓ Currently selected' : 'Requires Ollama running locally',
+      mode: 'ollama'
+    },
+    {
+      label: '$(cloud) OpenAI API',
+      description: 'Paid - GPT-4, GPT-3.5',
+      detail: currentMode === 'openai-api' ? '✓ Currently selected' : 'Requires OpenAI API key',
+      mode: 'openai-api'
+    },
+    {
+      label: '$(robot) Anthropic API',
+      description: 'Paid - Claude models',
+      detail: currentMode === 'anthropic-api' ? '✓ Currently selected' : 'Requires Anthropic API key',
+      mode: 'anthropic-api'
+    }
+  ];
+
+  const selected = await vscode.window.showQuickPick(modes, {
+    placeHolder: 'Select AI mode',
+    matchOnDescription: true,
+    matchOnDetail: true
+  });
+
+  if (selected && selected.mode !== currentMode) {
+    await config.update('mode', selected.mode, vscode.ConfigurationTarget.Global);
+    vscode.window.showInformationMessage(`Switched to ${selected.label}`);
+  }
+}
+
+/**
  * Extension activation
  */
 export async function activate(ctx: vscode.ExtensionContext) {
@@ -354,6 +400,65 @@ export async function activate(ctx: vscode.ExtensionContext) {
           'workbench.action.openSettings',
           'promptiply'
         );
+      }
+    ),
+    vscode.commands.registerCommand(
+      'promptiply.statusBarMenu',
+      async () => {
+        const config = vscode.workspace.getConfiguration('promptiply');
+        const mode = config.get('mode', 'vscode-lm');
+        const useEconomy = config.get('useEconomyModel', true);
+        const isFreeMode = mode === 'vscode-lm';
+
+        const actions = [
+          {
+            label: '$(person) Switch Profile',
+            description: 'Change active refinement profile',
+            action: 'profile'
+          },
+          {
+            label: '$(globe) Change Mode',
+            description: 'Switch between Copilot, Ollama, OpenAI, Claude',
+            action: 'mode'
+          }
+        ];
+
+        // Only show economy toggle for paid API modes
+        if (!isFreeMode) {
+          actions.push({
+            label: useEconomy ? '$(star) Switch to Premium' : '$(graph) Switch to Economy',
+            description: useEconomy ? 'Better quality, slower, more expensive' : 'Faster, cheaper, good quality',
+            action: 'economy'
+          });
+        }
+
+        actions.push({
+          label: '$(gear) Open Settings',
+          description: 'Configure Promptiply',
+          action: 'settings'
+        });
+
+        const selected = await vscode.window.showQuickPick(actions, {
+          placeHolder: 'What would you like to change?'
+        });
+
+        if (selected) {
+          switch (selected.action) {
+            case 'profile':
+              await vscode.commands.executeCommand('promptiply.switchProfile');
+              break;
+            case 'mode':
+              await showModeSelector();
+              await statusBarManager?.update();
+              break;
+            case 'economy':
+              await vscode.commands.executeCommand('promptiply.toggleEconomy');
+              break;
+            case 'settings':
+              await vscode.commands.executeCommand('promptiply.openSettings');
+              break;
+          }
+        }
       }
     )
   );

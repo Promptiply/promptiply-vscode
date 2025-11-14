@@ -291,7 +291,7 @@ export class PromptiplyChat {
         });
 
         stream.button({
-          command: 'promptiply.switchProfile',
+          command: 'promptiply.openSettings',
           title: '⚙️ Settings'
         });
 
@@ -423,18 +423,19 @@ export function registerChatCommands(
       const items = [
         {
           label: '$(circle-outline) No Profile',
-          description: 'Use base refinement without customization',
+          detail: 'Use base refinement without customization',
           profileId: null,
         },
         ...profiles.list.map(profile => ({
           label: `${activeProfile?.id === profile.id ? '$(check) ' : ''}${profile.name}`,
-          description: `${profile.persona} • ${profile.tone}`,
+          detail: `${profile.persona} • ${profile.tone}`,
           profileId: profile.id,
         })),
       ];
 
       const selected = await vscode.window.showQuickPick(items, {
         placeHolder: 'Select profile to refine with',
+        matchOnDetail: true,
       });
 
       if (selected !== undefined) {
