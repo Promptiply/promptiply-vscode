@@ -4,7 +4,7 @@ Refine your AI prompts for better results with Copilot, Claude Code, Cursor, and
 
 [![CI](https://github.com/Promptiply/promptiply-vscode/actions/workflows/ci.yml/badge.svg)](https://github.com/Promptiply/promptiply-vscode/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/Promptiply/promptiply-vscode/actions/workflows/codeql.yml/badge.svg)](https://github.com/Promptiply/promptiply-vscode/actions/workflows/codeql.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: GPL-3.0](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://opensource.org/licenses/gpl-3-0)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
 ## ✨ Features
