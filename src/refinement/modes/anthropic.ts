@@ -3,6 +3,7 @@
  */
 
 import { RefinementResult } from '../../profiles/types';
+import Logger from '../../utils/logger';
 
 export interface AnthropicConfig {
   apiKey: string;
@@ -106,7 +107,7 @@ export async function refineWithAnthropic(
 
     // Log token usage if available
     if (data.usage) {
-      console.log(`Anthropic tokens used: ${data.usage.input_tokens + data.usage.output_tokens} (input: ${data.usage.input_tokens}, output: ${data.usage.output_tokens})`);
+      Logger.debug(`Anthropic tokens used: ${data.usage.input_tokens + data.usage.output_tokens} (input: ${data.usage.input_tokens}, output: ${data.usage.output_tokens})`);
     }
 
     return result;
