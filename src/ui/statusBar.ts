@@ -8,6 +8,8 @@ import { ProfileManager } from '../profiles/manager';
 export class StatusBarManager {
   private statusBarItem: vscode.StatusBarItem;
   private profileManager: ProfileManager;
+  private updateTimeout: NodeJS.Timeout | null = null;
+  private readonly DEBOUNCE_MS = 100;
 
   constructor(profileManager: ProfileManager) {
     this.profileManager = profileManager;
@@ -22,14 +24,33 @@ export class StatusBarManager {
    * Initialize and show status bar
    */
   async initialize(): Promise<void> {
-    await this.update();
+    await this.performUpdate(); // Initial update without debounce
     this.statusBarItem.show();
   }
 
   /**
-   * Update status bar text
+   * Update status bar text (debounced)
    */
   async update(): Promise<void> {
+    // Clear existing timeout
+    if (this.updateTimeout) {
+      clearTimeout(this.updateTimeout);
+    }
+
+    // Schedule update
+    return new Promise<void>((resolve) => {
+      this.updateTimeout = setTimeout(async () => {
+        await this.performUpdate();
+        this.updateTimeout = null;
+        resolve();
+      }, this.DEBOUNCE_MS);
+    });
+  }
+
+  /**
+   * Perform the actual status bar update
+   */
+  private async performUpdate(): Promise<void> {
     const config = vscode.workspace.getConfiguration('promptiply');
     const mode = config.get('mode', 'vscode-lm');
     const useEconomy = config.get('useEconomyModel', true);
