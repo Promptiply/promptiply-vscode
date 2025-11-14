@@ -6,6 +6,7 @@ import * as assert from 'assert';
 import { TemplateManager } from '../../templates/manager';
 import { Template } from '../../templates/types';
 import { createMockContext } from '../helpers/mockContext';
+import { wait } from '../helpers/fixtures';
 
 suite('Template Manager Tests', () => {
     let manager: TemplateManager;
@@ -426,6 +427,9 @@ suite('Template Manager Tests', () => {
                 category: 'general',
                 content: 'Content',
             });
+
+            // Wait 2ms to ensure different timestamp
+            await wait(2);
 
             const t2 = await manager.create({
                 name: 'Template 1', // Same name
