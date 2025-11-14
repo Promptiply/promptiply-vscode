@@ -9,7 +9,7 @@
 <p align="center">
   <a href="https://github.com/Promptiply/promptiply-vscode/actions/workflows/ci.yml"><img src="https://github.com/Promptiply/promptiply-vscode/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="https://github.com/Promptiply/promptiply-vscode/actions/workflows/codeql.yml"><img src="https://github.com/Promptiply/promptiply-vscode/actions/workflows/codeql.yml/badge.svg" alt="CodeQL"></a>
-  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
+  <a href="https://opensource.org/licenses/GPL-3.0"><img src="https://img.shields.io/badge/License-GPLv3-blue.svg" alt="License: GPL-3.0"></a>
   <a href="CONTRIBUTING.md"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs Welcome"></a>
   <a href="https://marketplace.visualstudio.com/items?itemName=promptiply.promptiply"><img src="https://img.shields.io/visual-studio-marketplace/v/promptiply.promptiply?label=VS%20Code%20Marketplace" alt="VS Code Marketplace"></a>
   <a href="https://marketplace.visualstudio.com/items?itemName=promptiply.promptiply"><img src="https://img.shields.io/visual-studio-marketplace/i/promptiply.promptiply" alt="Installs"></a>
