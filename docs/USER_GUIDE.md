@@ -335,8 +335,8 @@ Promptiply offers multiple ways to refine prompts based on your workflow.
 {
   "promptiply.mode": "anthropic-api",
   "promptiply.anthropic.apiKey": "sk-ant-...",
-  "promptiply.anthropic.economyModel": "claude-3-5-haiku-20241022",
-  "promptiply.anthropic.premiumModel": "claude-3-5-sonnet-20241022"
+  "promptiply.anthropic.economyModel": "claude-haiku-4-5",
+  "promptiply.anthropic.premiumModel": "claude-sonnet-4-5"
 }
 ```
 
@@ -346,8 +346,8 @@ Promptiply offers multiple ways to refine prompts based on your workflow.
 3. Add to settings (as above)
 
 **Cost Estimates (approximate):**
-- Claude 3.5 Haiku: ~$1 per 1M input tokens
-- Claude 3.5 Sonnet: ~$3 per 1M input tokens
+- Claude Haiku 4.5: ~$1 per 1M input tokens
+- Claude Sonnet 4.5: ~$3 per 1M input tokens
 
 ---
 

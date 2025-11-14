@@ -2,6 +2,8 @@
 
 This directory contains the test suite for the Promptiply VSCode extension.
 
+> **For comprehensive testing documentation, see [TESTING.md](../../TESTING.md)** at the project root.
+
 ## Structure
 
 ```

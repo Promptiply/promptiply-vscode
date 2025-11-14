@@ -166,8 +166,8 @@ Open Settings (`Cmd/Ctrl+,`) and search for "Promptiply":
 
   // Anthropic API settings (pay-per-use)
   "promptiply.anthropic.apiKey": "sk-ant-...",  // Get from https://console.anthropic.com/
-  "promptiply.anthropic.economyModel": "claude-4-5-haiku-20251001",  // ~$1/1M tokens
-  "promptiply.anthropic.premiumModel": "claude-4-5-sonnet-20250929", // ~$3/1M tokens
+  "promptiply.anthropic.economyModel": "claude-haiku-4-5",  // ~$1/1M tokens
+  "promptiply.anthropic.premiumModel": "claude-sonnet-4-5", // ~$3/1M tokens
 
   // UI preferences
   "promptiply.ui.defaultMode": "ask", // "inline", "webview", "diff", or "ask"
@@ -310,16 +310,7 @@ Include measurable improvements (load time, FCP, TTI) for each optimization.
 
 ## 📸 Screenshots
 
-### Extension in Action
-> Add screenshots here showing the extension's UI, refinement process, and results
-
-### Chat Integration
-> Add screenshots of `@promptiply` being used in VSCode chat
-
-### Profile Management
-> Add screenshots of profile switching and customization
-
-*Note: Screenshots will be added in a future update*
+> Screenshots and demos coming soon! In the meantime, try the extension to see it in action.
 
 ## 🔄 Import from Chrome Extension
 

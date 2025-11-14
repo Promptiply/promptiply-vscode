@@ -489,8 +489,8 @@ Direct integration with Anthropic (Claude) API.
 {
   "promptiply.mode": "anthropic-api",
   "promptiply.anthropic.apiKey": "sk-ant-...",
-  "promptiply.anthropic.economyModel": "claude-3-5-haiku-20241022",
-  "promptiply.anthropic.premiumModel": "claude-3-5-sonnet-20241022"
+  "promptiply.anthropic.economyModel": "claude-haiku-4-5",
+  "promptiply.anthropic.premiumModel": "claude-sonnet-4-5"
 }
 ```
 
