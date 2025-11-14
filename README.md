@@ -49,7 +49,7 @@
   - **VSCode LM API** - Uses your Copilot subscription (FREE!)
   - **Ollama** - Local models (FREE & Private)
   - **OpenAI API** - Direct access to GPT-5, GPT-5 Mini (pay-per-use)
-  - **Anthropic API** - Direct access to Claude 3.5 Sonnet/Haiku (pay-per-use)
+  - **Anthropic API** - Direct access to Claude 4.5 Sonnet/Haiku (pay-per-use)
 - **🎯 Flexible UI**: Inline replacement, diff view, or side panel
 - **⌨️ Keyboard Shortcuts**: Fast refinement with `Ctrl+Shift+R`
 - **🔄 Import/Export**: Share profiles across devices or with your team
@@ -166,8 +166,8 @@ Open Settings (`Cmd/Ctrl+,`) and search for "Promptiply":
 
   // Anthropic API settings (pay-per-use)
   "promptiply.anthropic.apiKey": "sk-ant-...",  // Get from https://console.anthropic.com/
-  "promptiply.anthropic.economyModel": "claude-3-5-haiku-20241022",  // ~$1/1M tokens
-  "promptiply.anthropic.premiumModel": "claude-3-5-sonnet-20241022", // ~$3/1M tokens
+  "promptiply.anthropic.economyModel": "claude-4-5-haiku-20251001",  // ~$1/1M tokens
+  "promptiply.anthropic.premiumModel": "claude-4-5-sonnet-20250929", // ~$3/1M tokens
 
   // UI preferences
   "promptiply.ui.defaultMode": "ask", // "inline", "webview", "diff", or "ask"
@@ -383,7 +383,7 @@ See our [Contributing Guide](CONTRIBUTING.md) for details on:
 
 ## 📄 License
 
-MIT License - see LICENSE file for details
+GNU General Public License v3.0 - see [LICENSE](LICENSE) file for details
 
 ## 🙏 Credits
 

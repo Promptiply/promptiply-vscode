@@ -291,8 +291,8 @@ This is a major feature release that transforms how you interact with profiles t
   - Automatic token usage logging
   - JSON response parsing with fallbacks
 - 🧠 **Anthropic API Mode**: Direct access to Claude models
-  - Economy: `claude-3-5-haiku-20241022` (~$1/1M tokens)
-  - Premium: `claude-3-5-sonnet-20241022` (~$3/1M tokens)
+  - Economy: `claude-4-5-haiku-20251001` (~$1/1M tokens)
+  - Premium: `claude-4-5-sonnet-20250929` (~$3/1M tokens)
   - Native Anthropic API integration
   - Supports system prompts properly
   - Smart response parsing
