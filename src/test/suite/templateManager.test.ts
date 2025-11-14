@@ -11,7 +11,7 @@ suite('Template Manager Tests', () => {
     let manager: TemplateManager;
     let context: any;
 
-    beforeEach(() => {
+    setup(() => {
         context = createMockContext();
         manager = new TemplateManager(context);
     });

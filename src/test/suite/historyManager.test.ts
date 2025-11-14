@@ -12,7 +12,7 @@ suite('History Manager Tests', () => {
     let manager: HistoryManager;
     let context: any;
 
-    beforeEach(() => {
+    setup(() => {
         context = createMockContext();
         manager = new HistoryManager(context);
     });

@@ -13,7 +13,7 @@ suite('Refinement Engine Tests', () => {
     let profileManager: ProfileManager;
     let context: any;
 
-    beforeEach(() => {
+    setup(() => {
         context = createMockContext();
         profileManager = new ProfileManager(context);
         engine = new RefinementEngine(profileManager);

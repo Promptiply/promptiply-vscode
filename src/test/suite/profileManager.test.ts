@@ -12,7 +12,7 @@ suite('Profile Manager Tests', () => {
     let manager: ProfileManager;
     let context: any;
 
-    beforeEach(() => {
+    setup(() => {
         context = createMockContext();
         manager = new ProfileManager(context);
     });

@@ -13,7 +13,7 @@ suite('Profile Sync Tests', () => {
     let profileManager: ProfileManager;
     let context: any;
 
-    beforeEach(() => {
+    setup(() => {
         context = createMockContext();
         profileManager = new ProfileManager(context);
         syncManager = new ProfileSyncManager(context, profileManager);
