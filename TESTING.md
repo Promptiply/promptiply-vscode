@@ -2,6 +2,10 @@
 
 This document describes the automated testing setup for the Promptiply VSCode extension.
 
+> **Related Documentation:**
+> - [Manual Testing Guide for Profile Sync](docs/testing.md) - Manual test scenarios for sync feature
+> - [Test Suite README](src/test/README.md) - Quick developer reference for running tests
+
 ## Overview
 
 The test suite provides comprehensive coverage of the core functionality:

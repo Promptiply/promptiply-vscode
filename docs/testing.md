@@ -1,5 +1,7 @@
 # Manual Testing Guide for Profile Sync
 
+> **Note:** This is a specialized manual testing guide for the Profile Sync feature. For automated testing, see [TESTING.md](../TESTING.md).
+
 ## ✅ Automated Tests (COMPLETED)
 
 All automated tests passed (10/10 - 100% success rate):
