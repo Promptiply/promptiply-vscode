@@ -167,13 +167,13 @@ export async function activate(ctx: vscode.ExtensionContext) {
     setTimeout(() => loadChatParticipant().catch(console.error), 100);
   }
 
-  // Lazy load sync manager only if sync is enabled
+  // Always load sync manager - makes sync feature discoverable
+  const { syncManager: sm, syncStatusBar: ssb } = await loadSyncManager();
   const syncConfig = vscode.workspace.getConfiguration('promptiply');
   if (syncConfig.get<boolean>('sync.enabled', false)) {
-    const { syncManager: sm, syncStatusBar: ssb } = await loadSyncManager();
     await sm.enableSync();
-    await ssb.updateStatus();
   }
+  await ssb.updateStatus();
 
   // Register commands
   context.subscriptions.push(
@@ -341,7 +341,7 @@ export async function activate(ctx: vscode.ExtensionContext) {
         await sm.disableSync();
         const config = vscode.workspace.getConfiguration('promptiply');
         await config.update('sync.enabled', false, vscode.ConfigurationTarget.Global);
-        ssb.hide();
+        await ssb.updateStatus();
         vscode.window.showInformationMessage('Profile sync disabled');
       }
     ),
@@ -372,6 +372,83 @@ export async function activate(ctx: vscode.ExtensionContext) {
 
         if (newPath) {
           await sm.setSyncFilePath(newPath);
+        }
+      }
+    ),
+    vscode.commands.registerCommand(
+      'promptiply.syncMenu',
+      async () => {
+        const { syncManager: sm, syncStatusBar: ssb } = await loadSyncManager();
+        const config = vscode.workspace.getConfiguration('promptiply');
+        const syncEnabled = config.get<boolean>('sync.enabled', false);
+
+        const actions = [];
+
+        if (syncEnabled) {
+          actions.push(
+            {
+              label: '$(sync) Sync Now',
+              description: 'Sync profiles with browser extension',
+              action: 'sync'
+            },
+            {
+              label: '$(circle-slash) Disable Sync',
+              description: 'Stop syncing profiles',
+              action: 'disable'
+            }
+          );
+        } else {
+          actions.push({
+            label: '$(cloud-upload) Enable Sync',
+            description: 'Start syncing profiles with browser extension',
+            action: 'enable'
+          });
+        }
+
+        actions.push(
+          {
+            label: '$(folder) Set Sync Path',
+            description: 'Configure sync file location',
+            action: 'path'
+          },
+          {
+            label: '$(info) About Sync',
+            description: 'Learn about profile synchronization',
+            action: 'info'
+          }
+        );
+
+        const selected = await vscode.window.showQuickPick(actions, {
+          placeHolder: syncEnabled ? 'Sync is enabled' : 'Sync is disabled'
+        });
+
+        if (selected) {
+          switch (selected.action) {
+            case 'enable':
+              await vscode.commands.executeCommand('promptiply.enableSync');
+              break;
+            case 'disable':
+              await vscode.commands.executeCommand('promptiply.disableSync');
+              await ssb.updateStatus();
+              break;
+            case 'sync':
+              await vscode.commands.executeCommand('promptiply.syncNow');
+              break;
+            case 'path':
+              await vscode.commands.executeCommand('promptiply.setSyncPath');
+              break;
+            case 'info':
+              vscode.window.showInformationMessage(
+                'Profile Sync allows you to share profiles between VSCode and the Promptiply browser extension. ' +
+                'Enable sync to automatically synchronize your custom profiles across platforms.',
+                'Learn More'
+              ).then(action => {
+                if (action === 'Learn More') {
+                  vscode.env.openExternal(vscode.Uri.parse('https://github.com/Promptiply/promptiply-vscode#profile-sync'));
+                }
+              });
+              break;
+          }
         }
       }
     ),
