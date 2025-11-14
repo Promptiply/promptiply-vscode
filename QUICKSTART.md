@@ -31,7 +31,7 @@ Promptiply works with multiple AI providers. Pick the one that works best for yo
 1. Get API key: https://console.anthropic.com/
 2. Add to settings: `"promptiply.anthropic.apiKey": "sk-ant-..."`
 3. Change mode: `"promptiply.mode": "anthropic-api"`
-4. Uses Claude 3.5 models by default
+4. Uses Claude 4.5 models by default
 
 ### Step 2: Select a Profile
 

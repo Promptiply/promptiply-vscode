@@ -82,8 +82,14 @@ async function loadSyncManager() {
 /**
  * Extension activation
  */
+<<<<<<< HEAD
 export async function activate(ctx: vscode.ExtensionContext) {
   context = ctx;
+=======
+export async function activate(context: vscode.ExtensionContext) {
+  // Initialize logger
+  Logger.initialize();
+>>>>>>> origin/main
 
   // Initialize logger
   Logger.initialize();
