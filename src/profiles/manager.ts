@@ -12,15 +12,21 @@ const TOPIC_RECENCY_WEIGHT = 0.6;
 
 export class ProfileManager {
   private context: vscode.ExtensionContext;
+  private cache: ProfilesConfig | null = null;
 
   constructor(context: vscode.ExtensionContext) {
     this.context = context;
   }
 
   /**
-   * Get all profiles
+   * Get all profiles (with caching)
    */
   async getProfiles(): Promise<ProfilesConfig> {
+    // Return cached profiles if available
+    if (this.cache) {
+      return this.cache;
+    }
+
     const stored = this.context.globalState.get<ProfilesConfig>('profiles');
 
     if (!stored || !stored.list || stored.list.length === 0) {
@@ -34,7 +40,16 @@ export class ProfileManager {
       return config;
     }
 
+    // Cache the loaded profiles
+    this.cache = stored;
     return stored;
+  }
+
+  /**
+   * Invalidate the cache (called when profiles are modified)
+   */
+  private invalidateCache(): void {
+    this.cache = null;
   }
 
   /**
@@ -277,6 +292,7 @@ export class ProfileManager {
    * Save profiles to storage
    */
   async saveProfiles(config: ProfilesConfig): Promise<void> {
+    this.cache = config; // Update cache immediately
     await this.context.globalState.update('profiles', config);
   }
 

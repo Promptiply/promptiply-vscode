@@ -11,6 +11,41 @@ interface RecommendationResult {
   reason: string;
 }
 
+// Pre-computed pattern sets for faster lookups
+const CODE_PATTERNS = new Set([
+  'function', 'class', 'method', 'code', 'implement', 'algorithm',
+  'refactor', 'optimize', 'debug', 'fix', 'error', 'bug',
+  'create', 'build', 'develop', 'program', 'script', 'app', 'application',
+  'docker', 'dockerfile', 'container', 'deploy', 'api', 'endpoint',
+  'component', 'module', 'package', 'library', 'framework',
+  '.net', 'python', 'java', 'javascript', 'typescript', 'react', 'vue',
+  'node', 'express', 'django', 'flask', 'spring', 'laravel',
+  'database', 'sql', 'mongodb', 'postgres', 'mysql',
+  'service', 'microservice', 'architecture', 'design pattern',
+  'variable', 'loop', 'conditional', 'async', 'await', 'promise'
+]);
+
+const DOC_PATTERNS = new Set([
+  'document', 'explain', 'describe', 'write', 'readme', 'guide',
+  'tutorial', 'help', 'how to', 'what is', 'documentation',
+  'comment', 'comments', 'instruction', 'instructions'
+]);
+
+const TEST_PATTERNS = new Set([
+  'test', 'spec', 'unit test', 'integration', 'coverage', 'assert',
+  'testing', 'jest', 'mocha', 'pytest', 'junit'
+]);
+
+const MARKETING_PATTERNS = new Set([
+  'marketing', 'sell', 'persuade', 'convert', 'campaign', 'audience',
+  'engagement', 'brand', 'message', 'copy', 'advertisement',
+  'promotion', 'customer', 'user acquisition'
+]);
+
+// Keyword extraction cache
+const keywordCache = new Map<string, string[]>();
+const CACHE_MAX_SIZE = 100;
+
 export class ProfileRecommender {
   /**
    * Recommend a profile based on prompt content
@@ -93,73 +128,64 @@ export class ProfileRecommender {
   }
 
   /**
-   * Match common patterns to profiles
+   * Match common patterns to profiles (optimized with Set lookups)
    */
   private static matchPatterns(prompt: string, profile: Profile): number {
     let score = 0;
 
-    // Code-related patterns
-    const codePatterns = [
-      'function', 'class', 'method', 'code', 'implement', 'algorithm',
-      'refactor', 'optimize', 'debug', 'fix', 'error', 'bug',
-      'create', 'build', 'develop', 'program', 'script', 'app', 'application',
-      'docker', 'dockerfile', 'container', 'deploy', 'api', 'endpoint',
-      'component', 'module', 'package', 'library', 'framework',
-      '.net', 'python', 'java', 'javascript', 'typescript', 'react', 'vue',
-      'node', 'express', 'django', 'flask', 'spring', 'laravel',
-      'database', 'sql', 'mongodb', 'postgres', 'mysql',
-      'service', 'microservice', 'architecture', 'design pattern',
-      'variable', 'loop', 'conditional', 'async', 'await', 'promise'
-    ];
-
-    const docPatterns = [
-      'document', 'explain', 'describe', 'write', 'readme', 'guide',
-      'tutorial', 'help', 'how to', 'what is', 'documentation',
-      'comment', 'comments', 'instruction', 'instructions'
-    ];
-
-    const testPatterns = [
-      'test', 'spec', 'unit test', 'integration', 'coverage', 'assert',
-      'testing', 'jest', 'mocha', 'pytest', 'junit'
-    ];
-
-    const marketingPatterns = [
-      'marketing', 'sell', 'persuade', 'convert', 'campaign', 'audience',
-      'engagement', 'brand', 'message', 'copy', 'advertisement',
-      'promotion', 'customer', 'user acquisition'
-    ];
+    // Pre-compute lowercased profile properties
+    const personaLower = profile.persona.toLowerCase();
+    const nameLower = profile.name.toLowerCase();
 
     // Check if profile is code-focused
-    if (profile.persona.toLowerCase().includes('developer') ||
-        profile.persona.toLowerCase().includes('engineer') ||
-        profile.name.toLowerCase().includes('dev')) {
-      if (codePatterns.some(p => prompt.includes(p))) {
+    const isCodeProfile = personaLower.includes('developer') ||
+                          personaLower.includes('engineer') ||
+                          nameLower.includes('dev');
+
+    if (isCodeProfile) {
+      if (this.hasPatternMatch(prompt, CODE_PATTERNS)) {
         score += 0.4;
       }
-      if (testPatterns.some(p => prompt.includes(p))) {
+      if (this.hasPatternMatch(prompt, TEST_PATTERNS)) {
         score += 0.3;
       }
     }
 
     // Check if profile is documentation-focused
-    if (profile.persona.toLowerCase().includes('writer') ||
-        profile.persona.toLowerCase().includes('technical writer') ||
-        profile.name.toLowerCase().includes('doc')) {
-      if (docPatterns.some(p => prompt.includes(p))) {
+    const isDocProfile = personaLower.includes('writer') ||
+                         personaLower.includes('technical writer') ||
+                         nameLower.includes('doc');
+
+    if (isDocProfile) {
+      if (this.hasPatternMatch(prompt, DOC_PATTERNS)) {
         score += 0.4;
       }
     }
 
     // Check if profile is marketing-focused
-    if (profile.persona.toLowerCase().includes('marketing') ||
-        profile.persona.toLowerCase().includes('copywriter') ||
-        profile.name.toLowerCase().includes('marketing')) {
-      if (marketingPatterns.some(p => prompt.includes(p))) {
+    const isMarketingProfile = personaLower.includes('marketing') ||
+                               personaLower.includes('copywriter') ||
+                               nameLower.includes('marketing');
+
+    if (isMarketingProfile) {
+      if (this.hasPatternMatch(prompt, MARKETING_PATTERNS)) {
         score += 0.4;
       }
     }
 
     return score;
+  }
+
+  /**
+   * Check if prompt contains any pattern from the set (optimized)
+   */
+  private static hasPatternMatch(prompt: string, patterns: Set<string>): boolean {
+    for (const pattern of patterns) {
+      if (prompt.includes(pattern)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
@@ -225,14 +251,32 @@ export class ProfileRecommender {
   }
 
   /**
-   * Extract keywords from text
+   * Extract keywords from text (with memoization)
    */
   private static extractKeywords(text: string): string[] {
-    return text
+    // Check cache first
+    if (keywordCache.has(text)) {
+      return keywordCache.get(text)!;
+    }
+
+    const keywords = text
       .toLowerCase()
       .replace(/[^\w\s]/g, ' ')
       .split(/\s+/)
       .filter(word => word.length > 3);
+
+    // Cache the result
+    keywordCache.set(text, keywords);
+
+    // Limit cache size to prevent memory leaks
+    if (keywordCache.size > CACHE_MAX_SIZE) {
+      const firstKey = keywordCache.keys().next().value;
+      if (firstKey !== undefined) {
+        keywordCache.delete(firstKey);
+      }
+    }
+
+    return keywords;
   }
 
   /**
