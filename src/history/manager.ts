@@ -6,13 +6,22 @@ import * as vscode from 'vscode';
 import { HistoryEntry, HistoryGroup } from './types';
 
 const MAX_HISTORY_ENTRIES = 100;
+const DEFAULT_PAGE_SIZE = 20;
 
 export class HistoryManager {
   private context: vscode.ExtensionContext;
   private readonly HISTORY_KEY = 'promptiply.history';
+  private cache: HistoryEntry[] | null = null;
 
   constructor(context: vscode.ExtensionContext) {
     this.context = context;
+  }
+
+  /**
+   * Invalidate the cache
+   */
+  private invalidateCache(): void {
+    this.cache = null;
   }
 
   /**
@@ -32,14 +41,51 @@ export class HistoryManager {
     const trimmedHistory = history.slice(0, MAX_HISTORY_ENTRIES);
     await this.context.globalState.update(this.HISTORY_KEY, trimmedHistory);
 
+    // Invalidate cache after modification
+    this.invalidateCache();
+
     return fullEntry;
   }
 
   /**
-   * Get all history entries
+   * Get all history entries (with caching)
    */
   async getAll(): Promise<HistoryEntry[]> {
-    return this.context.globalState.get<HistoryEntry[]>(this.HISTORY_KEY, []);
+    if (this.cache) {
+      return this.cache;
+    }
+
+    const entries = this.context.globalState.get<HistoryEntry[]>(this.HISTORY_KEY, []);
+    this.cache = entries;
+    return entries;
+  }
+
+  /**
+   * Get paginated history entries
+   */
+  async getPaginated(page: number = 0, pageSize: number = DEFAULT_PAGE_SIZE): Promise<{
+    entries: HistoryEntry[];
+    total: number;
+    hasMore: boolean;
+  }> {
+    const allEntries = await this.getAll();
+    const start = page * pageSize;
+    const end = start + pageSize;
+    const entries = allEntries.slice(start, end);
+
+    return {
+      entries,
+      total: allEntries.length,
+      hasMore: end < allEntries.length,
+    };
+  }
+
+  /**
+   * Get recent entries (optimized for quick access)
+   */
+  async getRecent(limit: number = 10): Promise<HistoryEntry[]> {
+    const allEntries = await this.getAll();
+    return allEntries.slice(0, limit);
   }
 
   /**
@@ -64,7 +110,7 @@ export class HistoryManager {
   }
 
   /**
-   * Get entry by ID
+   * Get entry by ID (optimized with early exit)
    */
   async getById(id: string): Promise<HistoryEntry | undefined> {
     const history = await this.getAll();
@@ -78,6 +124,9 @@ export class HistoryManager {
     const history = await this.getAll();
     const filtered = history.filter((entry) => entry.id !== id);
     await this.context.globalState.update(this.HISTORY_KEY, filtered);
+
+    // Invalidate cache after modification
+    this.invalidateCache();
   }
 
   /**
@@ -85,6 +134,9 @@ export class HistoryManager {
    */
   async clear(): Promise<void> {
     await this.context.globalState.update(this.HISTORY_KEY, []);
+
+    // Invalidate cache after modification
+    this.invalidateCache();
   }
 
   /**

@@ -12,36 +12,90 @@ import { StatusBarManager } from './ui/statusBar';
 import { HistoryManager } from './history/manager';
 import { HistoryTreeViewProvider } from './history/treeViewProvider';
 import { WebviewPanelManager } from './ui/webviewPanel';
-import { TemplateManager } from './templates/manager';
-import { TemplateCommands } from './commands/templates';
-import { PromptiplyChat, registerChatCommands } from './chat/participant';
-import { ProfileSyncManager } from './profiles/sync';
 import { RecommendationLearning } from './profiles/recommendationLearning';
-import { SyncStatusBarManager } from './ui/syncStatusBar';
 import Logger from './utils/logger';
 
+// Lazy-loaded modules (loaded on demand)
+let templateManager: any;
+let templateCommands: any;
+let chatParticipant: any;
+let syncManager: any;
+let syncStatusBar: any;
+
+// Always-loaded UI managers
 let statusBarManager: StatusBarManager | undefined;
 let historyTreeView: HistoryTreeViewProvider | undefined;
-let syncManager: ProfileSyncManager | undefined;
-let syncStatusBar: SyncStatusBarManager | undefined;
+
+// Core managers (shared across lazy-loaded modules)
+let profileManager: ProfileManager;
+let historyManager: HistoryManager;
+let engine: RefinementEngine;
+let refineCommands: RefineCommands;
+let profileCommands: ProfileCommands;
+let context: vscode.ExtensionContext;
+
+/**
+ * Lazy load template system
+ */
+async function loadTemplateSystem() {
+  if (!templateManager) {
+    const { TemplateManager } = await import('./templates/manager');
+    const { TemplateCommands } = await import('./commands/templates');
+    templateManager = new TemplateManager(context);
+    templateCommands = new TemplateCommands(templateManager, refineCommands);
+  }
+  return { templateManager, templateCommands };
+}
+
+/**
+ * Lazy load chat participant
+ */
+async function loadChatParticipant() {
+  if (!chatParticipant) {
+    const module = await import('./chat/participant');
+    chatParticipant = new module.PromptiplyChat(engine, profileManager, historyManager);
+    const disposable = chatParticipant.register();
+    context.subscriptions.push(disposable);
+    module.registerChatCommands(context, engine, profileManager, historyManager);
+  }
+  return chatParticipant;
+}
+
+/**
+ * Lazy load sync manager
+ */
+async function loadSyncManager() {
+  if (!syncManager) {
+    const { ProfileSyncManager } = await import('./profiles/sync');
+    const { SyncStatusBarManager } = await import('./ui/syncStatusBar');
+
+    syncManager = new ProfileSyncManager(context, profileManager);
+    syncStatusBar = new SyncStatusBarManager(syncManager);
+
+    await syncStatusBar.initialize();
+    context.subscriptions.push(syncStatusBar);
+    syncManager.setStatusBarManager(syncStatusBar);
+  }
+  return { syncManager, syncStatusBar };
+}
 
 /**
  * Extension activation
  */
-export async function activate(context: vscode.ExtensionContext) {
+export async function activate(ctx: vscode.ExtensionContext) {
+  context = ctx;
+
   // Initialize logger
   Logger.initialize();
 
-  // Initialize managers
-  const profileManager = new ProfileManager(context);
-  const historyManager = new HistoryManager(context);
-  const templateManager = new TemplateManager(context);
-  const engine = new RefinementEngine(profileManager);
+  // Initialize core managers (required immediately)
+  profileManager = new ProfileManager(context);
+  historyManager = new HistoryManager(context);
+  engine = new RefinementEngine(profileManager);
 
-  // Initialize commands
-  const refineCommands = new RefineCommands(engine, profileManager, historyManager);
-  const profileCommands = new ProfileCommands(profileManager);
-  const templateCommands = new TemplateCommands(templateManager, refineCommands);
+  // Initialize core commands (required immediately)
+  refineCommands = new RefineCommands(engine, profileManager, historyManager);
+  profileCommands = new ProfileCommands(profileManager);
 
   // Initialize webview panel manager
   WebviewPanelManager.initialize(context);
@@ -57,31 +111,23 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.window.registerTreeDataProvider('promptiply.history', historyTreeView)
   );
 
-  // Initialize chat participant (for in-chat refinement)
-  const chatParticipant = new PromptiplyChat(engine, profileManager, historyManager);
-  context.subscriptions.push(chatParticipant.register());
-  registerChatCommands(context, engine, profileManager, historyManager);
-
-  // Initialize profile sync manager
-  syncManager = new ProfileSyncManager(context, profileManager);
-
-  // Initialize sync status bar
-  syncStatusBar = new SyncStatusBarManager(syncManager);
-  await syncStatusBar.initialize();
-  context.subscriptions.push(syncStatusBar);
-
-  // Connect sync manager with status bar for real-time updates
-  syncManager.setStatusBarManager(syncStatusBar);
-
-  // Enable sync if configured
-  const syncConfig = vscode.workspace.getConfiguration('promptiply');
-  if (syncConfig.get<boolean>('sync.enabled', false)) {
-    await syncManager.enableSync();
-    await syncStatusBar.updateStatus();
-  }
-
   // Initialize recommendation learning system
   await RecommendationLearning.initialize(context);
+
+  // Lazy load chat participant only when chat API is available
+  // This improves activation time for users not using chat features
+  if (vscode.lm) {
+    // Defer chat participant loading slightly to prioritize core activation
+    setTimeout(() => loadChatParticipant().catch(console.error), 100);
+  }
+
+  // Lazy load sync manager only if sync is enabled
+  const syncConfig = vscode.workspace.getConfiguration('promptiply');
+  if (syncConfig.get<boolean>('sync.enabled', false)) {
+    const { syncManager: sm, syncStatusBar: ssb } = await loadSyncManager();
+    await sm.enableSync();
+    await ssb.updateStatus();
+  }
 
   // Register commands
   context.subscriptions.push(
@@ -152,26 +198,41 @@ export async function activate(context: vscode.ExtensionContext) {
       }
     ),
 
-    // Template commands
+    // Template commands (lazy-loaded on first use)
     vscode.commands.registerCommand(
       'promptiply.useTemplate',
-      () => templateCommands.useTemplate()
+      async () => {
+        const { templateCommands: tc } = await loadTemplateSystem();
+        return tc.useTemplate();
+      }
     ),
     vscode.commands.registerCommand(
       'promptiply.createTemplate',
-      () => templateCommands.createTemplate()
+      async () => {
+        const { templateCommands: tc } = await loadTemplateSystem();
+        return tc.createTemplate();
+      }
     ),
     vscode.commands.registerCommand(
       'promptiply.manageTemplates',
-      () => templateCommands.manageTemplates()
+      async () => {
+        const { templateCommands: tc } = await loadTemplateSystem();
+        return tc.manageTemplates();
+      }
     ),
     vscode.commands.registerCommand(
       'promptiply.importTemplates',
-      () => templateCommands.importTemplates()
+      async () => {
+        const { templateCommands: tc } = await loadTemplateSystem();
+        return tc.importTemplates();
+      }
     ),
     vscode.commands.registerCommand(
       'promptiply.exportTemplates',
-      () => templateCommands.exportTemplates()
+      async () => {
+        const { templateCommands: tc } = await loadTemplateSystem();
+        return tc.exportTemplates();
+      }
     ),
 
     // History commands
@@ -213,62 +274,58 @@ export async function activate(context: vscode.ExtensionContext) {
       () => historyTreeView?.refresh()
     ),
 
-    // Sync commands
+    // Sync commands (lazy-loaded on first use)
     vscode.commands.registerCommand(
       'promptiply.enableSync',
       async () => {
-        if (syncManager && syncStatusBar) {
-          syncStatusBar.setSyncing();
-          await syncManager.enableSync();
-          const config = vscode.workspace.getConfiguration('promptiply');
-          await config.update('sync.enabled', true, vscode.ConfigurationTarget.Global);
-          syncStatusBar.setSynced();
-          syncStatusBar.show();
-          vscode.window.showInformationMessage('✅ Profile sync enabled');
-        }
+        const { syncManager: sm, syncStatusBar: ssb } = await loadSyncManager();
+        ssb.setSyncing();
+        await sm.enableSync();
+        const config = vscode.workspace.getConfiguration('promptiply');
+        await config.update('sync.enabled', true, vscode.ConfigurationTarget.Global);
+        ssb.setSynced();
+        ssb.show();
+        vscode.window.showInformationMessage('✅ Profile sync enabled');
       }
     ),
     vscode.commands.registerCommand(
       'promptiply.disableSync',
       async () => {
-        if (syncManager && syncStatusBar) {
-          await syncManager.disableSync();
-          const config = vscode.workspace.getConfiguration('promptiply');
-          await config.update('sync.enabled', false, vscode.ConfigurationTarget.Global);
-          syncStatusBar.hide();
-          vscode.window.showInformationMessage('Profile sync disabled');
-        }
+        const { syncManager: sm, syncStatusBar: ssb } = await loadSyncManager();
+        await sm.disableSync();
+        const config = vscode.workspace.getConfiguration('promptiply');
+        await config.update('sync.enabled', false, vscode.ConfigurationTarget.Global);
+        ssb.hide();
+        vscode.window.showInformationMessage('Profile sync disabled');
       }
     ),
     vscode.commands.registerCommand(
       'promptiply.syncNow',
       async () => {
-        if (syncManager && syncStatusBar) {
-          try {
-            syncStatusBar.setSyncing();
-            await syncManager.syncNow();
-            syncStatusBar.setSynced();
-            vscode.window.showInformationMessage('✅ Profiles synced successfully');
-          } catch (error) {
-            syncStatusBar.setError('Sync failed');
-          }
+        const { syncManager: sm, syncStatusBar: ssb } = await loadSyncManager();
+        try {
+          ssb.setSyncing();
+          await sm.syncNow();
+          ssb.setSynced();
+          vscode.window.showInformationMessage('✅ Profiles synced successfully');
+        } catch (error) {
+          ssb.setError('Sync failed');
         }
       }
     ),
     vscode.commands.registerCommand(
       'promptiply.setSyncPath',
       async () => {
-        if (syncManager) {
-          const currentPath = syncManager.getSyncFilePath();
-          const newPath = await vscode.window.showInputBox({
-            prompt: 'Enter sync file path',
-            value: currentPath,
-            placeHolder: '~/.promptiply-profiles.json',
-          });
+        const { syncManager: sm } = await loadSyncManager();
+        const currentPath = sm.getSyncFilePath();
+        const newPath = await vscode.window.showInputBox({
+          prompt: 'Enter sync file path',
+          value: currentPath,
+          placeHolder: '~/.promptiply-profiles.json',
+        });
 
-          if (newPath) {
-            await syncManager.setSyncFilePath(newPath);
-          }
+        if (newPath) {
+          await sm.setSyncFilePath(newPath);
         }
       }
     ),
