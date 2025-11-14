@@ -62,14 +62,14 @@ async function loadChatParticipant() {
 }
 
 /**
- * Lazy load sync manager
+ * Lazy load sync server
  */
 async function loadSyncManager() {
   if (!syncManager) {
-    const { ProfileSyncManager } = await import('./profiles/sync');
+    const { ProfileSyncServer } = await import('./profiles/syncServer');
     const { SyncStatusBarManager } = await import('./ui/syncStatusBar');
 
-    syncManager = new ProfileSyncManager(context, profileManager);
+    syncManager = new ProfileSyncServer(profileManager);
     syncStatusBar = new SyncStatusBarManager(syncManager);
 
     await syncStatusBar.initialize();
@@ -167,11 +167,15 @@ export async function activate(ctx: vscode.ExtensionContext) {
     setTimeout(() => loadChatParticipant().catch(console.error), 100);
   }
 
-  // Always load sync manager - makes sync feature discoverable
+  // Always load sync server - makes sync feature discoverable
   const { syncManager: sm, syncStatusBar: ssb } = await loadSyncManager();
   const syncConfig = vscode.workspace.getConfiguration('promptiply');
   if (syncConfig.get<boolean>('sync.enabled', false)) {
-    await sm.enableSync();
+    try {
+      await sm.start();
+    } catch (error) {
+      console.error('Failed to start sync server:', error);
+    }
   }
   await ssb.updateStatus();
 
@@ -320,25 +324,32 @@ export async function activate(ctx: vscode.ExtensionContext) {
       () => historyTreeView?.refresh()
     ),
 
-    // Sync commands (lazy-loaded on first use)
+    // Sync commands (HTTP server-based)
     vscode.commands.registerCommand(
       'promptiply.enableSync',
       async () => {
         const { syncManager: sm, syncStatusBar: ssb } = await loadSyncManager();
-        ssb.setSyncing();
-        await sm.enableSync();
-        const config = vscode.workspace.getConfiguration('promptiply');
-        await config.update('sync.enabled', true, vscode.ConfigurationTarget.Global);
-        ssb.setSynced();
-        ssb.show();
-        vscode.window.showInformationMessage('✅ Profile sync enabled');
+        try {
+          ssb.setSyncing();
+          await sm.start();
+          const config = vscode.workspace.getConfiguration('promptiply');
+          await config.update('sync.enabled', true, vscode.ConfigurationTarget.Global);
+          ssb.setSynced();
+          const info = sm.getServerInfo();
+          vscode.window.showInformationMessage(
+            `✅ Profile sync enabled! Browser extension can connect to http://localhost:${info.port}`
+          );
+        } catch (error: any) {
+          ssb.setError('Failed to start server');
+          vscode.window.showErrorMessage(`Failed to enable sync: ${error.message}`);
+        }
       }
     ),
     vscode.commands.registerCommand(
       'promptiply.disableSync',
       async () => {
         const { syncManager: sm, syncStatusBar: ssb } = await loadSyncManager();
-        await sm.disableSync();
+        await sm.stop();
         const config = vscode.workspace.getConfiguration('promptiply');
         await config.update('sync.enabled', false, vscode.ConfigurationTarget.Global);
         await ssb.updateStatus();
@@ -351,27 +362,16 @@ export async function activate(ctx: vscode.ExtensionContext) {
         const { syncManager: sm, syncStatusBar: ssb } = await loadSyncManager();
         try {
           ssb.setSyncing();
-          await sm.syncNow();
+          // Notify browser extension of current profiles
+          await sm.notifyProfilesChanged();
           ssb.setSynced();
-          vscode.window.showInformationMessage('✅ Profiles synced successfully');
+          const info = sm.getServerInfo();
+          vscode.window.showInformationMessage(
+            `✅ Profiles broadcast to ${info.clients} connected browser(s)`
+          );
         } catch (error) {
           ssb.setError('Sync failed');
-        }
-      }
-    ),
-    vscode.commands.registerCommand(
-      'promptiply.setSyncPath',
-      async () => {
-        const { syncManager: sm } = await loadSyncManager();
-        const currentPath = sm.getSyncFilePath();
-        const newPath = await vscode.window.showInputBox({
-          prompt: 'Enter sync file path',
-          value: currentPath,
-          placeHolder: '~/.promptiply-profiles.json',
-        });
-
-        if (newPath) {
-          await sm.setSyncFilePath(newPath);
+          vscode.window.showErrorMessage('Failed to sync profiles');
         }
       }
     ),
@@ -381,6 +381,7 @@ export async function activate(ctx: vscode.ExtensionContext) {
         const { syncManager: sm, syncStatusBar: ssb } = await loadSyncManager();
         const config = vscode.workspace.getConfiguration('promptiply');
         const syncEnabled = config.get<boolean>('sync.enabled', false);
+        const info = sm.getServerInfo();
 
         const actions = [];
 
@@ -388,38 +389,40 @@ export async function activate(ctx: vscode.ExtensionContext) {
           actions.push(
             {
               label: '$(sync) Sync Now',
-              description: 'Sync profiles with browser extension',
+              description: `Broadcast to ${info.clients} connected browser(s)`,
               action: 'sync'
             },
             {
+              label: '$(server) Server Status',
+              description: `http://localhost:${info.port} - ${info.clients} client(s) connected`,
+              action: 'status'
+            },
+            {
               label: '$(circle-slash) Disable Sync',
-              description: 'Stop syncing profiles',
+              description: 'Stop sync server',
               action: 'disable'
             }
           );
         } else {
           actions.push({
             label: '$(cloud-upload) Enable Sync',
-            description: 'Start syncing profiles with browser extension',
+            description: 'Start HTTP sync server for browser extension',
             action: 'enable'
           });
         }
 
-        actions.push(
-          {
-            label: '$(folder) Set Sync Path',
-            description: 'Configure sync file location',
-            action: 'path'
-          },
-          {
-            label: '$(info) About Sync',
-            description: 'Learn about profile synchronization',
-            action: 'info'
-          }
-        );
+        actions.push({
+          label: '$(info) About Sync',
+          description: 'Learn about profile synchronization',
+          action: 'info'
+        });
+
+        const placeholder = syncEnabled
+          ? `Sync Server Running - ${info.clients} browser(s) connected`
+          : 'Sync is disabled';
 
         const selected = await vscode.window.showQuickPick(actions, {
-          placeHolder: syncEnabled ? 'Sync is enabled' : 'Sync is disabled'
+          placeHolder: placeholder
         });
 
         if (selected) {
@@ -434,13 +437,25 @@ export async function activate(ctx: vscode.ExtensionContext) {
             case 'sync':
               await vscode.commands.executeCommand('promptiply.syncNow');
               break;
-            case 'path':
-              await vscode.commands.executeCommand('promptiply.setSyncPath');
+            case 'status':
+              vscode.window.showInformationMessage(
+                `Promptiply Sync Server\n\n` +
+                `Status: Running\n` +
+                `URL: http://localhost:${info.port}\n` +
+                `Connected Browsers: ${info.clients}\n\n` +
+                `Browser extension connects to this server for real-time profile sync.`,
+                'Copy URL'
+              ).then(action => {
+                if (action === 'Copy URL') {
+                  vscode.env.clipboard.writeText(`http://localhost:${info.port}`);
+                  vscode.window.showInformationMessage('Sync server URL copied to clipboard');
+                }
+              });
               break;
             case 'info':
               vscode.window.showInformationMessage(
-                'Profile Sync allows you to share profiles between VSCode and the Promptiply browser extension. ' +
-                'Enable sync to automatically synchronize your custom profiles across platforms.',
+                'Profile Sync uses a local HTTP server to share profiles between VSCode and your browser extension. ' +
+                'When enabled, VSCode runs a server on localhost:8765 that your browser extension can connect to for real-time sync.',
                 'Learn More'
               ).then(action => {
                 if (action === 'Learn More') {
@@ -571,7 +586,16 @@ export async function activate(ctx: vscode.ExtensionContext) {
 /**
  * Extension deactivation
  */
-export function deactivate() {
+export async function deactivate() {
+  // Stop sync server if running
+  if (syncManager) {
+    try {
+      await syncManager.stop();
+    } catch (error) {
+      console.error('Error stopping sync server:', error);
+    }
+  }
+
   // Dispose logger
   Logger.dispose();
 
