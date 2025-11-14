@@ -28,8 +28,6 @@ let syncStatusBar: SyncStatusBarManager | undefined;
  * Extension activation
  */
 export async function activate(context: vscode.ExtensionContext) {
-  console.log('Promptiply extension is now active');
-
   // Initialize managers
   const profileManager = new ProfileManager(context);
   const historyManager = new HistoryManager(context);
@@ -331,5 +329,5 @@ export async function activate(context: vscode.ExtensionContext) {
  * Extension deactivation
  */
 export function deactivate() {
-  console.log('Promptiply extension is now deactivated');
+  // Cleanup handled automatically by VSCode subscriptions
 }
