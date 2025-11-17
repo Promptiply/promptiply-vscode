@@ -2,11 +2,25 @@
 
 ## Overview
 
-Promptiply now supports seamless profile synchronization between the VSCode extension and Chrome browser extension. This allows you to maintain consistent profiles across both platforms.
+Promptiply supports **automatic profile synchronization** between the VSCode extension and Chrome browser extension. VSCode automatically exports when you make changes and imports when the sync file is updated.
 
-## How It Works
+## Quick Start
 
-### Sync File Format
+See [SYNC_SETUP.md](../SYNC_SETUP.md) for a quick setup guide.
+
+## What's Automatic
+
+### VSCode Extension (Fully Automatic) ✅
+- **Auto-export:** Any profile change → Automatically exports to sync file
+- **Auto-import:** Sync file changes → Automatically imports
+
+### Browser Extension (Manual) ⚠️
+- **Export:** Manual - export when needed
+- **Import:** Manual - import from sync file
+
+Browser extensions cannot automatically watch filesystem files due to security restrictions.
+
+## Sync File Format
 
 Both extensions use a unified sync file format:
 ```json
