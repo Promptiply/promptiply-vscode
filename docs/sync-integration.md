@@ -26,9 +26,16 @@ Both extensions use a unified sync file format:
       }
     }
   ],
-  "activeProfileId": "profile_id_or_null"
+  "activeProfileId": "profile_id_or_null",
+  "profiles_storage_location": "sync"
 }
 ```
+
+**New in v0.5.0:** The `profiles_storage_location` field supports the browser extension's hybrid storage approach:
+- `"sync"` - Uses `chrome.storage.sync` (cross-device sync, ~8KB limit)
+- `"local"` - Uses `chrome.storage.local` (local only, 10MB+ capacity)
+
+The browser extension automatically prompts to switch to local storage when quota is exceeded.
 
 ### Default Sync Location
 
@@ -74,7 +81,30 @@ When sync is enabled, VSCode watches the sync file for changes:
 - Any update to the sync file automatically imports new profiles
 - Profiles are updated in real-time
 
+### 5. Storage Location Preference (Browser Extension)
+
+**New in v0.5.0:** Set the storage location preference for the browser extension:
+
+**Via Command Palette:**
+1. Open Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`)
+2. Run `Promptiply: Set Browser Extension Storage Location`
+3. Choose:
+   - **Sync Storage** - Cross-device sync, ~8KB limit (recommended)
+   - **Local Storage** - Local only, 10MB+ capacity
+
+This preference is automatically synced to the browser extension when you export profiles.
+
+**Note:** The browser extension will automatically prompt you to switch to local storage if you exceed the sync storage quota (~8KB). This hybrid approach ensures you can always store your profiles while maintaining cross-device sync when possible.
+
 ## Chrome Extension Setup
+
+### Hybrid Storage Approach
+
+**New in v0.5.0:** The browser extension uses a hybrid storage system:
+- **Default:** `chrome.storage.sync` - Your profiles sync across all your Chrome browsers
+- **Fallback:** `chrome.storage.local` - Used automatically when you have many or large profiles
+
+The extension will automatically prompt you when approaching the sync storage limit, allowing you to switch to local storage. Your storage preference is saved and synced via the sync file.
 
 ### 1. Export for VSCode
 
@@ -85,6 +115,8 @@ When sync is enabled, VSCode watches the sync file for changes:
 5. Select profiles to export
 6. Click **Export Selected**
 7. Save as `~/.promptiply-profiles.json` (or your custom sync path)
+
+The export will include your storage location preference (`profiles_storage_location`).
 
 ### 2. Import from VSCode
 
@@ -207,7 +239,9 @@ Export profiles before making major modifications:
 
 - **Import Parser:** `options/index.js` - `parseImportEnvelope()`
 - **Export Function:** `options/index.js` - `exportProfiles()`
-- **Storage:** Uses `chrome.storage.sync` API
+- **Storage:** Hybrid approach - `chrome.storage.sync` (default) + `chrome.storage.local` (fallback)
+- **Storage Preference:** Saved as `profiles_storage_location` in `chrome.storage.sync`
+- **Quota Management:** Automatically prompts to switch storage when approaching limits
 - **Format Detection:** Automatically detects VSCode sync format
 
 ### Sync Format vs Export Format
@@ -216,7 +250,8 @@ Export profiles before making major modifications:
 ```json
 {
   "list": [...],
-  "activeProfileId": "..."
+  "activeProfileId": "...",
+  "profiles_storage_location": "sync"
 }
 ```
 
