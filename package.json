@@ -2,7 +2,7 @@
   "name": "promptiply",
   "displayName": "Promptiply",
   "description": "Refine your AI prompts for better results with Copilot, Claude Code, and more. Supports customizable profiles with smart topic tracking.",
-  "version": "0.6.0",
+  "version": "0.0.1",
   "publisher": "promptiply",
   "icon": "media/icon.png",
   "license": "GPL-3.0",
