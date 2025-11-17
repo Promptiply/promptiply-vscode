@@ -17,7 +17,7 @@ export class StatusBarManager {
       vscode.StatusBarAlignment.Right,
       100
     );
-    this.statusBarItem.command = 'promptiply.switchProfile';
+    this.statusBarItem.command = 'promptiply.statusBarMenu';
   }
 
   /**
@@ -69,13 +69,18 @@ export class StatusBarManager {
       parts.push('Promptiply');
     }
 
-    // Mode indicator
+    // Mode indicator with cost clarity
     const modeText = this.getModeText(mode);
+    const isFreeMode = mode === 'vscode-lm';
     parts.push('|');
     parts.push(modeText);
 
-    // Economy/Premium indicator
-    parts.push(useEconomy ? '💰' : '⭐');
+    // Cost/Quality indicator - clearer text
+    if (isFreeMode) {
+      parts.push('(Free)');
+    } else {
+      parts.push(useEconomy ? '(Economy)' : '(Premium)');
+    }
 
     this.statusBarItem.text = parts.join(' ');
 
@@ -92,8 +97,15 @@ export class StatusBarManager {
     }
 
     tooltip.appendMarkdown(`**Mode:** ${this.getModeName(mode)}\n`);
-    tooltip.appendMarkdown(`**Quality:** ${useEconomy ? 'Economy (faster, cheaper)' : 'Premium (better, slower)'}\n\n`);
-    tooltip.appendMarkdown('_Click to switch profile_');
+
+    if (isFreeMode) {
+      tooltip.appendMarkdown(`**Cost:** Free (using Copilot)\n\n`);
+    } else {
+      tooltip.appendMarkdown(`**Cost:** Paid API\n`);
+      tooltip.appendMarkdown(`**Quality:** ${useEconomy ? 'Economy (faster, cheaper)' : 'Premium (better quality)'}\n\n`);
+    }
+
+    tooltip.appendMarkdown('_Click to change profile, mode, or quality_');
 
     this.statusBarItem.tooltip = tooltip;
   }

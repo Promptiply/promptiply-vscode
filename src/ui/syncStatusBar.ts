@@ -25,19 +25,16 @@ export class SyncStatusBarManager {
       vscode.StatusBarAlignment.Right,
       99 // Just to the left of the main Promptiply status
     );
-    this.statusBarItem.command = 'promptiply.syncNow';
+    this.statusBarItem.command = 'promptiply.syncMenu';
   }
 
   /**
-   * Initialize and show status bar if sync is enabled
+   * Initialize and show status bar (always visible)
    */
   async initialize(): Promise<void> {
     await this.updateStatus();
-
-    // Only show if sync is enabled or configured
-    if (this.shouldShow()) {
-      this.statusBarItem.show();
-    }
+    // Always show - makes sync feature discoverable
+    this.statusBarItem.show();
   }
 
   /**
@@ -111,14 +108,16 @@ export class SyncStatusBarManager {
 
     switch (this.currentStatus) {
       case SyncStatus.Disabled:
-        // Don't show when disabled
-        this.statusBarItem.hide();
-        return;
+        parts.push('$(cloud-upload)');
+        parts.push('Sync Off');
+        this.statusBarItem.tooltip = 'Profile sync is disabled\nClick to enable sync with browser extension';
+        this.statusBarItem.backgroundColor = undefined;
+        break;
 
       case SyncStatus.Synced:
         parts.push('$(cloud-upload)');
         parts.push('Synced');
-        this.statusBarItem.tooltip = 'Profiles synced with browser extension\nClick to sync now';
+        this.statusBarItem.tooltip = 'Profiles synced with browser extension\nClick to sync now or disable';
         this.statusBarItem.backgroundColor = undefined;
         break;
 
@@ -132,7 +131,7 @@ export class SyncStatusBarManager {
       case SyncStatus.Error:
         parts.push('$(warning)');
         parts.push('Sync Error');
-        this.statusBarItem.tooltip = 'Sync error - Click to retry';
+        this.statusBarItem.tooltip = 'Sync error - Click to retry or disable';
         this.statusBarItem.backgroundColor = new vscode.ThemeColor(
           'statusBarItem.errorBackground'
         );
@@ -141,7 +140,7 @@ export class SyncStatusBarManager {
       case SyncStatus.NotConfigured:
         parts.push('$(cloud-upload)');
         parts.push('Sync Available');
-        this.statusBarItem.tooltip = 'Profile sync available - Click to enable';
+        this.statusBarItem.tooltip = 'Profile sync available - Click to configure';
         this.statusBarItem.backgroundColor = undefined;
         break;
     }

@@ -34,6 +34,9 @@ jobs:
       - name: Run linter
         run: npm run lint --if-present
 
+      - name: Security audit
+        run: npm audit --audit-level=high
+
   build:
     name: Build & Test (${{ matrix.os }}, Node ${{ matrix.node-version }})
     runs-on: ${{ matrix.os }}

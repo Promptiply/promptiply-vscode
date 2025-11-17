@@ -13,6 +13,7 @@ import { HistoryManager } from './history/manager';
 import { HistoryTreeViewProvider } from './history/treeViewProvider';
 import { WebviewPanelManager } from './ui/webviewPanel';
 import { RecommendationLearning } from './profiles/recommendationLearning';
+import { SecretsManager } from './utils/secrets';
 import Logger from './utils/logger';
 
 // Lazy-loaded modules (loaded on demand)
@@ -29,6 +30,7 @@ let historyTreeView: HistoryTreeViewProvider | undefined;
 // Core managers (shared across lazy-loaded modules)
 let profileManager: ProfileManager;
 let historyManager: HistoryManager;
+let secretsManager: SecretsManager;
 let engine: RefinementEngine;
 let refineCommands: RefineCommands;
 let profileCommands: ProfileCommands;
@@ -62,14 +64,14 @@ async function loadChatParticipant() {
 }
 
 /**
- * Lazy load sync manager
+ * Lazy load sync server
  */
 async function loadSyncManager() {
   if (!syncManager) {
-    const { ProfileSyncManager } = await import('./profiles/sync');
+    const { ProfileSyncServer } = await import('./profiles/syncServer');
     const { SyncStatusBarManager } = await import('./ui/syncStatusBar');
 
-    syncManager = new ProfileSyncManager(context, profileManager);
+    syncManager = new ProfileSyncServer(profileManager);
     syncStatusBar = new SyncStatusBarManager(syncManager);
 
     await syncStatusBar.initialize();
@@ -77,6 +79,52 @@ async function loadSyncManager() {
     syncManager.setStatusBarManager(syncStatusBar);
   }
   return { syncManager, syncStatusBar };
+}
+
+/**
+ * Show mode selector menu
+ */
+async function showModeSelector() {
+  const config = vscode.workspace.getConfiguration('promptiply');
+  const currentMode = config.get<string>('mode', 'vscode-lm');
+
+  const modes = [
+    {
+      label: '$(copilot) VSCode LM (Copilot)',
+      description: 'Free - Uses GitHub Copilot',
+      detail: currentMode === 'vscode-lm' ? '✓ Currently selected' : 'Requires GitHub Copilot subscription',
+      mode: 'vscode-lm'
+    },
+    {
+      label: '$(server) Ollama',
+      description: 'Free - Local AI models',
+      detail: currentMode === 'ollama' ? '✓ Currently selected' : 'Requires Ollama running locally',
+      mode: 'ollama'
+    },
+    {
+      label: '$(cloud) OpenAI API',
+      description: 'Paid - GPT-4, GPT-3.5',
+      detail: currentMode === 'openai-api' ? '✓ Currently selected' : 'Requires OpenAI API key',
+      mode: 'openai-api'
+    },
+    {
+      label: '$(robot) Anthropic API',
+      description: 'Paid - Claude models',
+      detail: currentMode === 'anthropic-api' ? '✓ Currently selected' : 'Requires Anthropic API key',
+      mode: 'anthropic-api'
+    }
+  ];
+
+  const selected = await vscode.window.showQuickPick(modes, {
+    placeHolder: 'Select AI mode',
+    matchOnDescription: true,
+    matchOnDetail: true
+  });
+
+  if (selected && selected.mode !== currentMode) {
+    await config.update('mode', selected.mode, vscode.ConfigurationTarget.Global);
+    vscode.window.showInformationMessage(`Switched to ${selected.label}`);
+  }
 }
 
 /**
@@ -91,7 +139,11 @@ export async function activate(ctx: vscode.ExtensionContext) {
   // Initialize core managers (required immediately)
   profileManager = new ProfileManager(context);
   historyManager = new HistoryManager(context);
-  engine = new RefinementEngine(profileManager);
+  secretsManager = new SecretsManager(context);
+  engine = new RefinementEngine(profileManager, secretsManager);
+
+  // Migrate API keys from settings to secure storage (if needed)
+  await secretsManager.migrateApiKeysFromSettings();
 
   // Initialize core commands (required immediately)
   refineCommands = new RefineCommands(engine, profileManager, historyManager);
@@ -114,6 +166,36 @@ export async function activate(ctx: vscode.ExtensionContext) {
   // Initialize recommendation learning system
   await RecommendationLearning.initialize(context);
 
+  // Register commands for managing API keys
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      'promptiply.setOpenAIKey',
+      async () => {
+        await SecretsManager.promptForApiKey(secretsManager, 'openai');
+      }
+    ),
+    vscode.commands.registerCommand(
+      'promptiply.setAnthropicKey',
+      async () => {
+        await SecretsManager.promptForApiKey(secretsManager, 'anthropic');
+      }
+    ),
+    vscode.commands.registerCommand(
+      'promptiply.clearOpenAIKey',
+      async () => {
+        await secretsManager.deleteApiKey('openai');
+        vscode.window.showInformationMessage('OpenAI API key cleared');
+      }
+    ),
+    vscode.commands.registerCommand(
+      'promptiply.clearAnthropicKey',
+      async () => {
+        await secretsManager.deleteApiKey('anthropic');
+        vscode.window.showInformationMessage('Anthropic API key cleared');
+      }
+    )
+  );
+
   // Lazy load chat participant only when chat API is available
   // This improves activation time for users not using chat features
   if (vscode.lm) {
@@ -121,13 +203,17 @@ export async function activate(ctx: vscode.ExtensionContext) {
     setTimeout(() => loadChatParticipant().catch(console.error), 100);
   }
 
-  // Lazy load sync manager only if sync is enabled
+  // Always load sync server - makes sync feature discoverable
+  const { syncManager: sm, syncStatusBar: ssb } = await loadSyncManager();
   const syncConfig = vscode.workspace.getConfiguration('promptiply');
   if (syncConfig.get<boolean>('sync.enabled', false)) {
-    const { syncManager: sm, syncStatusBar: ssb } = await loadSyncManager();
-    await sm.enableSync();
-    await ssb.updateStatus();
+    try {
+      await sm.start();
+    } catch (error) {
+      console.error('Failed to start sync server:', error);
+    }
   }
+  await ssb.updateStatus();
 
   // Register commands
   context.subscriptions.push(
@@ -274,28 +360,35 @@ export async function activate(ctx: vscode.ExtensionContext) {
       () => historyTreeView?.refresh()
     ),
 
-    // Sync commands (lazy-loaded on first use)
+    // Sync commands (HTTP server-based)
     vscode.commands.registerCommand(
       'promptiply.enableSync',
       async () => {
         const { syncManager: sm, syncStatusBar: ssb } = await loadSyncManager();
-        ssb.setSyncing();
-        await sm.enableSync();
-        const config = vscode.workspace.getConfiguration('promptiply');
-        await config.update('sync.enabled', true, vscode.ConfigurationTarget.Global);
-        ssb.setSynced();
-        ssb.show();
-        vscode.window.showInformationMessage('✅ Profile sync enabled');
+        try {
+          ssb.setSyncing();
+          await sm.start();
+          const config = vscode.workspace.getConfiguration('promptiply');
+          await config.update('sync.enabled', true, vscode.ConfigurationTarget.Global);
+          ssb.setSynced();
+          const info = sm.getServerInfo();
+          vscode.window.showInformationMessage(
+            `✅ Profile sync enabled! Browser extension can connect to http://localhost:${info.port}`
+          );
+        } catch (error: any) {
+          ssb.setError('Failed to start server');
+          vscode.window.showErrorMessage(`Failed to enable sync: ${error.message}`);
+        }
       }
     ),
     vscode.commands.registerCommand(
       'promptiply.disableSync',
       async () => {
         const { syncManager: sm, syncStatusBar: ssb } = await loadSyncManager();
-        await sm.disableSync();
+        await sm.stop();
         const config = vscode.workspace.getConfiguration('promptiply');
         await config.update('sync.enabled', false, vscode.ConfigurationTarget.Global);
-        ssb.hide();
+        await ssb.updateStatus();
         vscode.window.showInformationMessage('Profile sync disabled');
       }
     ),
@@ -305,27 +398,108 @@ export async function activate(ctx: vscode.ExtensionContext) {
         const { syncManager: sm, syncStatusBar: ssb } = await loadSyncManager();
         try {
           ssb.setSyncing();
-          await sm.syncNow();
+          // Notify browser extension of current profiles
+          await sm.notifyProfilesChanged();
           ssb.setSynced();
-          vscode.window.showInformationMessage('✅ Profiles synced successfully');
+          const info = sm.getServerInfo();
+          vscode.window.showInformationMessage(
+            `✅ Profiles broadcast to ${info.clients} connected browser(s)`
+          );
         } catch (error) {
           ssb.setError('Sync failed');
+          vscode.window.showErrorMessage('Failed to sync profiles');
         }
       }
     ),
     vscode.commands.registerCommand(
-      'promptiply.setSyncPath',
+      'promptiply.syncMenu',
       async () => {
-        const { syncManager: sm } = await loadSyncManager();
-        const currentPath = sm.getSyncFilePath();
-        const newPath = await vscode.window.showInputBox({
-          prompt: 'Enter sync file path',
-          value: currentPath,
-          placeHolder: '~/.promptiply-profiles.json',
+        const { syncManager: sm, syncStatusBar: ssb } = await loadSyncManager();
+        const config = vscode.workspace.getConfiguration('promptiply');
+        const syncEnabled = config.get<boolean>('sync.enabled', false);
+        const info = sm.getServerInfo();
+
+        const actions = [];
+
+        if (syncEnabled) {
+          actions.push(
+            {
+              label: '$(sync) Sync Now',
+              description: `Broadcast to ${info.clients} connected browser(s)`,
+              action: 'sync'
+            },
+            {
+              label: '$(server) Server Status',
+              description: `http://localhost:${info.port} - ${info.clients} client(s) connected`,
+              action: 'status'
+            },
+            {
+              label: '$(circle-slash) Disable Sync',
+              description: 'Stop sync server',
+              action: 'disable'
+            }
+          );
+        } else {
+          actions.push({
+            label: '$(cloud-upload) Enable Sync',
+            description: 'Start HTTP sync server for browser extension',
+            action: 'enable'
+          });
+        }
+
+        actions.push({
+          label: '$(info) About Sync',
+          description: 'Learn about profile synchronization',
+          action: 'info'
         });
 
-        if (newPath) {
-          await sm.setSyncFilePath(newPath);
+        const placeholder = syncEnabled
+          ? `Sync Server Running - ${info.clients} browser(s) connected`
+          : 'Sync is disabled';
+
+        const selected = await vscode.window.showQuickPick(actions, {
+          placeHolder: placeholder
+        });
+
+        if (selected) {
+          switch (selected.action) {
+            case 'enable':
+              await vscode.commands.executeCommand('promptiply.enableSync');
+              break;
+            case 'disable':
+              await vscode.commands.executeCommand('promptiply.disableSync');
+              await ssb.updateStatus();
+              break;
+            case 'sync':
+              await vscode.commands.executeCommand('promptiply.syncNow');
+              break;
+            case 'status':
+              vscode.window.showInformationMessage(
+                `Promptiply Sync Server\n\n` +
+                `Status: Running\n` +
+                `URL: http://localhost:${info.port}\n` +
+                `Connected Browsers: ${info.clients}\n\n` +
+                `Browser extension connects to this server for real-time profile sync.`,
+                'Copy URL'
+              ).then(action => {
+                if (action === 'Copy URL') {
+                  vscode.env.clipboard.writeText(`http://localhost:${info.port}`);
+                  vscode.window.showInformationMessage('Sync server URL copied to clipboard');
+                }
+              });
+              break;
+            case 'info':
+              vscode.window.showInformationMessage(
+                'Profile Sync uses a local HTTP server to share profiles between VSCode and your browser extension. ' +
+                'When enabled, VSCode runs a server on localhost:8765 that your browser extension can connect to for real-time sync.',
+                'Learn More'
+              ).then(action => {
+                if (action === 'Learn More') {
+                  vscode.env.openExternal(vscode.Uri.parse('https://github.com/Promptiply/promptiply-vscode#profile-sync'));
+                }
+              });
+              break;
+          }
         }
       }
     ),
@@ -390,6 +564,65 @@ export async function activate(ctx: vscode.ExtensionContext) {
           'promptiply'
         );
       }
+    ),
+    vscode.commands.registerCommand(
+      'promptiply.statusBarMenu',
+      async () => {
+        const config = vscode.workspace.getConfiguration('promptiply');
+        const mode = config.get('mode', 'vscode-lm');
+        const useEconomy = config.get('useEconomyModel', true);
+        const isFreeMode = mode === 'vscode-lm';
+
+        const actions = [
+          {
+            label: '$(person) Switch Profile',
+            description: 'Change active refinement profile',
+            action: 'profile'
+          },
+          {
+            label: '$(globe) Change Mode',
+            description: 'Switch between Copilot, Ollama, OpenAI, Claude',
+            action: 'mode'
+          }
+        ];
+
+        // Only show economy toggle for paid API modes
+        if (!isFreeMode) {
+          actions.push({
+            label: useEconomy ? '$(star) Switch to Premium' : '$(graph) Switch to Economy',
+            description: useEconomy ? 'Better quality, slower, more expensive' : 'Faster, cheaper, good quality',
+            action: 'economy'
+          });
+        }
+
+        actions.push({
+          label: '$(gear) Open Settings',
+          description: 'Configure Promptiply',
+          action: 'settings'
+        });
+
+        const selected = await vscode.window.showQuickPick(actions, {
+          placeHolder: 'What would you like to change?'
+        });
+
+        if (selected) {
+          switch (selected.action) {
+            case 'profile':
+              await vscode.commands.executeCommand('promptiply.switchProfile');
+              break;
+            case 'mode':
+              await showModeSelector();
+              await statusBarManager?.update();
+              break;
+            case 'economy':
+              await vscode.commands.executeCommand('promptiply.toggleEconomy');
+              break;
+            case 'settings':
+              await vscode.commands.executeCommand('promptiply.openSettings');
+              break;
+          }
+        }
+      }
     )
   );
 
@@ -424,7 +657,16 @@ export async function activate(ctx: vscode.ExtensionContext) {
 /**
  * Extension deactivation
  */
-export function deactivate() {
+export async function deactivate() {
+  // Stop sync server if running
+  if (syncManager) {
+    try {
+      await syncManager.stop();
+    } catch (error) {
+      console.error('Error stopping sync server:', error);
+    }
+  }
+
   // Dispose logger
   Logger.dispose();
 
