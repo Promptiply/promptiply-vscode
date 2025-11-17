@@ -214,6 +214,30 @@
         "title": "Set Browser Extension Storage Location",
         "category": "Promptiply",
         "icon": "$(database)"
+      },
+      {
+        "command": "promptiply.setOpenAIKey",
+        "title": "Set OpenAI API Key (Secure)",
+        "category": "Promptiply",
+        "icon": "$(key)"
+      },
+      {
+        "command": "promptiply.setAnthropicKey",
+        "title": "Set Anthropic API Key (Secure)",
+        "category": "Promptiply",
+        "icon": "$(key)"
+      },
+      {
+        "command": "promptiply.clearOpenAIKey",
+        "title": "Clear OpenAI API Key",
+        "category": "Promptiply",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "promptiply.clearAnthropicKey",
+        "title": "Clear Anthropic API Key",
+        "category": "Promptiply",
+        "icon": "$(trash)"
       }
     ],
     "keybindings": [
@@ -356,7 +380,8 @@
         "promptiply.openai.apiKey": {
           "type": "string",
           "default": "",
-          "description": "OpenAI API key (stored securely)"
+          "description": "OpenAI API key (DEPRECATED: Use Command Palette > 'Promptiply: Set OpenAI API Key' for secure storage)",
+          "deprecationMessage": "API keys are now stored securely using VSCode Secrets API. Use Command Palette > 'Promptiply: Set OpenAI API Key' instead."
         },
         "promptiply.openai.economyModel": {
           "type": "string",
@@ -371,7 +396,8 @@
         "promptiply.anthropic.apiKey": {
           "type": "string",
           "default": "",
-          "description": "Anthropic API key (stored securely)"
+          "description": "Anthropic API key (DEPRECATED: Use Command Palette > 'Promptiply: Set Anthropic API Key' for secure storage)",
+          "deprecationMessage": "API keys are now stored securely using VSCode Secrets API. Use Command Palette > 'Promptiply: Set Anthropic API Key' instead."
         },
         "promptiply.anthropic.economyModel": {
           "type": "string",
@@ -469,7 +495,7 @@
     "@typescript-eslint/parser": "^8.46.0",
     "typescript-eslint": "^8.46.0",
     "eslint": "^9.39.0",
-    "glob": "^11.0.0",
+    "glob": "^11.1.0",
     "mocha": "^11.0.0",
     "typescript": "^5.3.3",
     "webpack": "^5.89.0",
@@ -477,6 +503,9 @@
     "ts-loader": "^9.5.1",
     "@vscode/test-cli": "^0.0.12",
     "@vscode/test-electron": "^2.3.8"
+  },
+  "overrides": {
+    "glob": "^11.1.0"
   },
   "dependencies": {}
 }
