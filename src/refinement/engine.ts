@@ -10,6 +10,7 @@ import { refineWithVSCodeLM, isVSCodeLMAvailable } from './modes/vscodeLM';
 import { refineWithOllama, isOllamaAvailable } from './modes/ollama';
 import { refineWithOpenAI, isOpenAIConfigured } from './modes/openai';
 import { refineWithAnthropic, isAnthropicConfigured } from './modes/anthropic';
+import { SecretsManager } from '../utils/secrets';
 
 export type RefinementMode = 'vscode-lm' | 'ollama' | 'openai-api' | 'anthropic-api';
 
@@ -39,9 +40,11 @@ export interface RefinementConfig {
 
 export class RefinementEngine {
   private profileManager: ProfileManager;
+  private secretsManager?: SecretsManager;
 
-  constructor(profileManager: ProfileManager) {
+  constructor(profileManager: ProfileManager, secretsManager?: SecretsManager) {
     this.profileManager = profileManager;
+    this.secretsManager = secretsManager;
   }
 
   /**
@@ -235,6 +238,7 @@ export class RefinementEngine {
 
   /**
    * Get configuration from workspace settings
+   * Note: API keys are retrieved separately via SecretsManager for security
    */
   static getConfig(): RefinementConfig {
     const config = vscode.workspace.getConfiguration('promptiply');
@@ -252,15 +256,30 @@ export class RefinementEngine {
         premiumModel: config.get('ollama.premiumModel', 'llama3.1:8b'),
       },
       openai: {
-        apiKey: config.get('openai.apiKey', ''),
+        apiKey: '', // Retrieved from SecretsManager
         economyModel: config.get('openai.economyModel', 'gpt-4o-mini'),
         premiumModel: config.get('openai.premiumModel', 'gpt-4o'),
       },
       anthropic: {
-        apiKey: config.get('anthropic.apiKey', ''),
+        apiKey: '', // Retrieved from SecretsManager
         economyModel: config.get('anthropic.economyModel', 'claude-haiku-4-5'),
         premiumModel: config.get('anthropic.premiumModel', 'claude-sonnet-4-5'),
       },
     };
+  }
+
+  /**
+   * Get configuration with API keys from SecretsManager
+   */
+  async getConfigWithSecrets(): Promise<RefinementConfig> {
+    const config = RefinementEngine.getConfig();
+
+    // Retrieve API keys from secure storage
+    if (this.secretsManager) {
+      config.openai.apiKey = await this.secretsManager.getApiKey('openai');
+      config.anthropic.apiKey = await this.secretsManager.getApiKey('anthropic');
+    }
+
+    return config;
   }
 }

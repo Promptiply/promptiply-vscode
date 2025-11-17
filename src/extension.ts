@@ -13,6 +13,7 @@ import { HistoryManager } from './history/manager';
 import { HistoryTreeViewProvider } from './history/treeViewProvider';
 import { WebviewPanelManager } from './ui/webviewPanel';
 import { RecommendationLearning } from './profiles/recommendationLearning';
+import { SecretsManager } from './utils/secrets';
 import Logger from './utils/logger';
 
 // Lazy-loaded modules (loaded on demand)
@@ -29,6 +30,7 @@ let historyTreeView: HistoryTreeViewProvider | undefined;
 // Core managers (shared across lazy-loaded modules)
 let profileManager: ProfileManager;
 let historyManager: HistoryManager;
+let secretsManager: SecretsManager;
 let engine: RefinementEngine;
 let refineCommands: RefineCommands;
 let profileCommands: ProfileCommands;
@@ -91,7 +93,11 @@ export async function activate(ctx: vscode.ExtensionContext) {
   // Initialize core managers (required immediately)
   profileManager = new ProfileManager(context);
   historyManager = new HistoryManager(context);
-  engine = new RefinementEngine(profileManager);
+  secretsManager = new SecretsManager(context);
+  engine = new RefinementEngine(profileManager, secretsManager);
+
+  // Migrate API keys from settings to secure storage (if needed)
+  await secretsManager.migrateApiKeysFromSettings();
 
   // Initialize core commands (required immediately)
   refineCommands = new RefineCommands(engine, profileManager, historyManager);
@@ -113,6 +119,36 @@ export async function activate(ctx: vscode.ExtensionContext) {
 
   // Initialize recommendation learning system
   await RecommendationLearning.initialize(context);
+
+  // Register commands for managing API keys
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      'promptiply.setOpenAIKey',
+      async () => {
+        await SecretsManager.promptForApiKey(secretsManager, 'openai');
+      }
+    ),
+    vscode.commands.registerCommand(
+      'promptiply.setAnthropicKey',
+      async () => {
+        await SecretsManager.promptForApiKey(secretsManager, 'anthropic');
+      }
+    ),
+    vscode.commands.registerCommand(
+      'promptiply.clearOpenAIKey',
+      async () => {
+        await secretsManager.deleteApiKey('openai');
+        vscode.window.showInformationMessage('OpenAI API key cleared');
+      }
+    ),
+    vscode.commands.registerCommand(
+      'promptiply.clearAnthropicKey',
+      async () => {
+        await secretsManager.deleteApiKey('anthropic');
+        vscode.window.showInformationMessage('Anthropic API key cleared');
+      }
+    )
+  );
 
   // Lazy load chat participant only when chat API is available
   // This improves activation time for users not using chat features

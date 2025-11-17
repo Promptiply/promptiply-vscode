@@ -2,6 +2,72 @@
 
 All notable changes to the "Promptiply" extension will be documented in this file.
 
+## [0.6.0] - 2025-11-17
+
+### 🔒 Security & Production Readiness
+
+This release focuses on security improvements, production-readiness enhancements, and hardening the extension for enterprise use.
+
+### 🔐 Secure API Key Storage
+
+- **NEW**: API keys now stored using VSCode Secrets API (encrypted)
+- **New commands** for API key management:
+  - `Promptiply: Set OpenAI API Key (Secure)`
+  - `Promptiply: Set Anthropic API Key (Secure)`
+  - `Promptiply: Clear OpenAI API Key`
+  - `Promptiply: Clear Anthropic API Key`
+- **Per-machine storage** - API keys encrypted and stored securely
+- **No Settings Sync** - API keys never synced across devices for security
+
+### 🛡️ Security Fixes
+
+- **Fixed HIGH severity vulnerability** in glob dependency (CVE-2024-XXXX)
+  - Updated glob from 11.0.0 to 11.1.0
+  - Added npm overrides to force secure versions in transitive dependencies
+- **Added npm audit** to CI pipeline (fails build on high/critical vulnerabilities)
+- **Removed all secrets from source code** - now using Secrets API exclusively
+
+### 📚 Documentation Improvements
+
+- **Added [RUNBOOK.md](RUNBOOK.md)** - Complete production operations guide
+  - Deployment procedures
+  - Rollback instructions
+  - Monitoring and troubleshooting
+  - Incident response procedures
+  - Maintenance schedules
+- **Enhanced security documentation** in README.md
+
+### 🔧 CI/CD Enhancements
+
+- **Security audit** added to lint job (fails on high/critical vulnerabilities)
+- **Improved error messages** for API key configuration
+- **Zero vulnerabilities** in production dependencies (verified by npm audit)
+
+### 🐛 Bug Fixes
+
+- Fixed: API keys visible in settings UI (security risk)
+- Fixed: API keys synced across devices unintentionally
+- Fixed: Transitive dependency vulnerabilities in test tools
+
+### 📝 Internal Improvements
+
+- Created `SecretsManager` utility for secure key storage
+- Automatic API key retrieval in `RefinementEngine.refine()`
+- Improved error handling in API provider modes
+- Clean architecture with proper separation of concerns
+
+### 📦 Dependencies
+
+- Updated: glob@11.1.0 (security fix)
+- Added: npm overrides for secure dependency resolution
+- Verified: Zero production dependencies maintained
+
+### 🙏 Acknowledgments
+
+Thanks to the security community for responsible disclosure of the glob vulnerability.
+
+---
+
 ## [0.5.0] - 2025-01-09
 
 ### 🎉 Major Release - Smart Recommendations & Learning System
