@@ -39,9 +39,11 @@ export interface RefinementConfig {
 
 export class RefinementEngine {
   private profileManager: ProfileManager;
+  private secretsManager?: any; // Optional secrets manager
 
-  constructor(profileManager: ProfileManager) {
+  constructor(profileManager: ProfileManager, secretsManager?: any) {
     this.profileManager = profileManager;
+    this.secretsManager = secretsManager;
   }
 
   /**
