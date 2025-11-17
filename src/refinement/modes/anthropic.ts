@@ -4,6 +4,10 @@
 
 import { RefinementResult } from '../../profiles/types';
 import Logger from '../../utils/logger';
+import { fetchWithResilience, RateLimiter } from '../../utils/apiResilience';
+
+// Rate limiter: 60 requests per minute for Anthropic
+const rateLimiter = new RateLimiter(1);
 
 export interface AnthropicConfig {
   apiKey: string;
@@ -57,7 +61,10 @@ export async function refineWithAnthropic(
   ];
 
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    // Apply rate limiting
+    await rateLimiter.throttle();
+
+    const response = await fetchWithResilience('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -71,6 +78,8 @@ export async function refineWithAnthropic(
         temperature: 0.2,
         max_tokens: 4096,
       }),
+      timeout: 60000, // 60 second timeout for AI responses
+      retries: 2, // Retry twice on failure
     });
 
     if (!response.ok) {

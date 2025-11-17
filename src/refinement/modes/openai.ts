@@ -4,6 +4,10 @@
 
 import { RefinementResult } from '../../profiles/types';
 import Logger from '../../utils/logger';
+import { fetchWithResilience, RateLimiter } from '../../utils/apiResilience';
+
+// Rate limiter: 60 requests per minute for OpenAI
+const rateLimiter = new RateLimiter(1);
 
 export interface OpenAIConfig {
   apiKey: string;
@@ -62,7 +66,10 @@ export async function refineWithOpenAI(
   ];
 
   try {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    // Apply rate limiting
+    await rateLimiter.throttle();
+
+    const response = await fetchWithResilience('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -74,6 +81,8 @@ export async function refineWithOpenAI(
         max_completion_tokens: 4096,
         response_format: { type: 'json_object' },
       }),
+      timeout: 60000, // 60 second timeout for AI responses
+      retries: 2, // Retry twice on failure
     });
 
     if (!response.ok) {

@@ -2,9 +2,37 @@
 
 All notable changes to the "Promptiply" extension will be documented in this file.
 
-## [0.5.0] - 2025-01-09
+## [0.5.0] - 2025-01-17
 
-### 🎉 Major Release - Smart Recommendations & Learning System
+### 🎉 Major Release - Production Readiness & Smart Recommendations
+
+This is a major feature and stability release focused on production readiness, API resilience, and smart recommendations.
+
+### 🔒 Production Readiness Improvements
+
+- **API Resilience**: Automatic retry with exponential backoff for failed requests
+  - 60-second timeout for cloud APIs (OpenAI, Anthropic)
+  - 120-second timeout for local models (Ollama)
+  - Automatic retry (2x for cloud, 1x for local) with exponential backoff
+  - Rate limiting (1 req/sec) to prevent quota exhaustion
+- **Code Coverage Tracking**: CI/CD now tracks and reports test coverage
+  - c8 coverage tool integration
+  - HTML and LCOV reports generated
+  - Codecov integration for coverage tracking
+- **Correct AI Model Names**: Fixed incorrect model configurations
+  - ⚠️ **BREAKING**: OpenAI models corrected (gpt-4o, gpt-4o-mini)
+  - ⚠️ **BREAKING**: Anthropic models corrected (claude-3-5-sonnet-20241022, claude-3-5-haiku-20241022)
+  - See [MIGRATION.md](MIGRATION.md) for upgrade instructions
+- **Enhanced Security**:
+  - Better API key security recommendations
+  - Improved error messages for authentication issues
+  - Rate limiting to prevent accidental quota exhaustion
+- **Production Documentation**:
+  - [RUNBOOK.md](RUNBOOK.md) - Complete operational guide
+  - [MIGRATION.md](MIGRATION.md) - Upgrade and migration instructions
+  - Updated README with correct model information
+
+### 🎉 Smart Recommendations & Learning System
 
 This is a major feature release that transforms how you interact with profiles through AI-powered recommendations and learning.
 

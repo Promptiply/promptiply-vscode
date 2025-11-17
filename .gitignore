@@ -6,3 +6,6 @@ dist
 .vscode-test-web
 MARKETPLACE.md
 RELEASE.md
+coverage
+.nyc_output
+*.log

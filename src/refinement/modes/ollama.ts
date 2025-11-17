@@ -5,6 +5,7 @@
 
 import * as vscode from 'vscode';
 import { RefinementResult } from '../../profiles/types';
+import { fetchWithResilience } from '../../utils/apiResilience';
 
 export interface OllamaConfig {
   endpoint: string;
@@ -46,7 +47,7 @@ export async function refineWithOllama(
   progressCallback?.(`Connecting to Ollama (${model})...`);
 
   try {
-    const response = await fetch(url, {
+    const response = await fetchWithResilience(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -60,6 +61,8 @@ export async function refineWithOllama(
           top_p: 0.9,
         },
       }),
+      timeout: 120000, // 120 second timeout for local models (can be slower)
+      retries: 1, // Retry once on failure
     });
 
     if (!response.ok) {

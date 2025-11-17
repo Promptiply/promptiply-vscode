@@ -48,8 +48,8 @@
 - **🆓 Multiple AI Providers**:
   - **VSCode LM API** - Uses your Copilot subscription (FREE!)
   - **Ollama** - Local models (FREE & Private)
-  - **OpenAI API** - Direct access to GPT-5, GPT-5 Mini (pay-per-use)
-  - **Anthropic API** - Direct access to Claude 4.5 Sonnet/Haiku (pay-per-use)
+  - **OpenAI API** - Direct access to GPT-4o, GPT-4o Mini (pay-per-use)
+  - **Anthropic API** - Direct access to Claude 3.5 Sonnet/Haiku (pay-per-use)
 - **🎯 Flexible UI**: Inline replacement, diff view, or side panel
 - **⌨️ Keyboard Shortcuts**: Fast refinement with `Ctrl+Shift+R`
 - **🔄 Import/Export**: Share profiles across devices or with your team
@@ -161,13 +161,13 @@ Open Settings (`Cmd/Ctrl+,`) and search for "Promptiply":
 
   // OpenAI API settings (pay-per-use)
   "promptiply.openai.apiKey": "sk-...",  // Get from https://platform.openai.com/api-keys
-  "promptiply.openai.economyModel": "gpt-5-mini",         // GPT-5 Mini (fast and cost-effective)
-  "promptiply.openai.premiumModel": "gpt-5-2025-08-07",   // GPT-5 (flagship model)
+  "promptiply.openai.economyModel": "gpt-4o-mini",         // GPT-4o Mini (fast and cost-effective)
+  "promptiply.openai.premiumModel": "gpt-4o",              // GPT-4o (flagship model)
 
   // Anthropic API settings (pay-per-use)
   "promptiply.anthropic.apiKey": "sk-ant-...",  // Get from https://console.anthropic.com/
-  "promptiply.anthropic.economyModel": "claude-haiku-4-5",  // ~$1/1M tokens
-  "promptiply.anthropic.premiumModel": "claude-sonnet-4-5", // ~$3/1M tokens
+  "promptiply.anthropic.economyModel": "claude-3-5-haiku-20241022",  // Claude 3.5 Haiku
+  "promptiply.anthropic.premiumModel": "claude-3-5-sonnet-20241022", // Claude 3.5 Sonnet
 
   // UI preferences
   "promptiply.ui.defaultMode": "ask", // "inline", "webview", "diff", or "ask"
@@ -191,7 +191,7 @@ Open Settings (`Cmd/Ctrl+,`) and search for "Promptiply":
 3. Add to settings: `"promptiply.anthropic.apiKey": "sk-ant-..."`
 4. Set mode: `"promptiply.mode": "anthropic-api"`
 
-**Note:** API keys are stored in VSCode settings. For better security, consider using environment variables or VSCode secrets API in future versions.
+**Security Note:** API keys are currently stored in VSCode settings. For production use, consider storing them in environment variables or using a secrets management service. Never commit API keys to version control.
 
 ## 🎮 Commands
 
