@@ -282,7 +282,7 @@ describe('ProfileManager', () => {
 
 ### Manual Testing
 
-See [MANUAL_TESTING_GUIDE.md](MANUAL_TESTING_GUIDE.md) for detailed testing scenarios, especially for sync functionality.
+See [Manual Testing Guide for Profile Sync](docs/testing.md) for detailed testing scenarios, especially for sync functionality.
 
 ## Sync Compatibility
 

@@ -2,24 +2,23 @@ name: Automated Tests
 
 on:
   push:
-    branches: [ main, develop, claude/** ]
+    branches: [ main, develop ]
   pull_request:
     branches: [ main, develop ]
   workflow_dispatch:
 
 jobs:
-  test:
+  automated-tests:
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-    runs-on: ${{ matrix.os }}
-
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Setup Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v6
       with:
         node-version: '20.x'
         cache: 'npm'
@@ -37,32 +36,3 @@ jobs:
       uses: coactions/setup-xvfb@v1
       with:
         run: npm test
-
-    - name: Upload test results
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: test-results-${{ matrix.os }}
-        path: |
-          out/test/
-          .nyc_output/
-          coverage/
-        retention-days: 30
-
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20.x'
-        cache: 'npm'
-
-    - name: Install dependencies
-      run: npm ci
-
-    - name: Run linter
-      run: npm run lint

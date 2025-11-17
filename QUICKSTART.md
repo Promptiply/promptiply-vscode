@@ -144,7 +144,7 @@ Have profiles in the Chrome extension?
 
 ## 🤝 Need Help?
 
-- GitHub Issues: https://github.com/tomronen/promptiply/issues
+- GitHub Issues: https://github.com/Promptiply/promptiply-vscode/issues
 - Documentation: See README.md
 - Chrome Extension: https://github.com/tomronen/promptiply
 
