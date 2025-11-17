@@ -6,7 +6,25 @@ All notable changes to the "Promptiply" extension will be documented in this fil
 
 ### 🔒 Security & Production Readiness
 
-This release focuses on security improvements, production-readiness enhancements, and hardening the extension for enterprise use.
+This release focuses on security improvements, production-readiness enhancements, UX improvements, and hardening the extension for enterprise use.
+
+### 🎨 UX Improvements
+
+- **NEW: Mode Selector Menu** - Click status bar to quickly switch between AI providers
+  - Visual icons for each mode (Copilot, Ollama, OpenAI, Claude)
+  - Shows current selection and requirements
+  - Quick access from status bar tooltip
+- **Improved Status Bar** - Better visual feedback and interaction
+  - Click to access quick settings menu
+  - Shows profile, mode, and economy/premium status
+  - Clear tooltips with all current settings
+- **Enhanced Sync Status Bar** - Always visible with easy toggle
+  - Real-time sync server status
+  - Click to access sync menu
+  - Shows connected browser clients count
+- **Better Settings UX** - Streamlined access to all settings
+  - Quick menu for common actions (profile, mode, economy toggle)
+  - Direct access to full settings
 
 ### 🔐 Secure API Key Storage
 
@@ -18,6 +36,16 @@ This release focuses on security improvements, production-readiness enhancements
   - `Promptiply: Clear Anthropic API Key`
 - **Per-machine storage** - API keys encrypted and stored securely
 - **No Settings Sync** - API keys never synced across devices for security
+- **Automatic migration** - Old settings automatically migrated to secure storage
+
+### 🌐 HTTP Sync Server
+
+- **NEW: Built-in HTTP sync server** for browser extension
+  - Runs locally on port 3456 (configurable)
+  - Real-time profile broadcasting to connected browsers
+  - WebSocket support for instant sync
+  - Easy enable/disable from sync menu
+- **See [BROWSER_SYNC_CLIENT.md](BROWSER_SYNC_CLIENT.md) for browser integration**
 
 ### 🛡️ Security Fixes
 
