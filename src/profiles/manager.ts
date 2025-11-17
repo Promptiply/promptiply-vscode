@@ -13,6 +13,12 @@ const TOPIC_RECENCY_WEIGHT = 0.6;
 export class ProfileManager {
   private context: vscode.ExtensionContext;
   private cache: ProfilesConfig | null = null;
+  private onProfilesChangedEmitter = new vscode.EventEmitter<ProfilesConfig>();
+
+  /**
+   * Event that fires when profiles are changed (saved)
+   */
+  readonly onProfilesChanged = this.onProfilesChangedEmitter.event;
 
   constructor(context: vscode.ExtensionContext) {
     this.context = context;
@@ -294,6 +300,9 @@ export class ProfileManager {
   async saveProfiles(config: ProfilesConfig): Promise<void> {
     this.cache = config; // Update cache immediately
     await this.context.globalState.update('profiles', config);
+
+    // Emit event to notify listeners (e.g., sync manager)
+    this.onProfilesChangedEmitter.fire(config);
   }
 
   /**

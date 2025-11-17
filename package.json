@@ -208,6 +208,12 @@
         "title": "Set Sync File Path",
         "category": "Promptiply",
         "icon": "$(file)"
+      },
+      {
+        "command": "promptiply.setStorageLocation",
+        "title": "Set Browser Extension Storage Location",
+        "category": "Promptiply",
+        "icon": "$(database)"
       }
     ],
     "keybindings": [
@@ -420,12 +426,25 @@
         "promptiply.sync.enabled": {
           "type": "boolean",
           "default": false,
-          "description": "Enable automatic profile sync with browser extension"
+          "description": "Enable automatic profile sync with browser extension. Watches the sync file for changes and keeps profiles synchronized in real-time."
         },
         "promptiply.sync.filePath": {
           "type": "string",
           "default": "",
-          "description": "Custom path for profile sync file (leave empty for default: ~/.promptiply-profiles.json)"
+          "description": "Custom path for profile sync file. Leave empty for default: ~/.promptiply-profiles.json. This file is used to sync profiles between VSCode and the browser extension using a hybrid storage approach (chrome.storage.sync for small data, chrome.storage.local for larger profiles)."
+        },
+        "promptiply.sync.storageLocation": {
+          "type": "string",
+          "default": "sync",
+          "enum": [
+            "sync",
+            "local"
+          ],
+          "enumDescriptions": [
+            "Use chrome.storage.sync (cross-device sync, ~8KB limit) - Recommended for most users",
+            "Use chrome.storage.local (local only, 10MB+ capacity) - For users with many or large profiles"
+          ],
+          "description": "Storage location preference for browser extension. The browser extension will automatically prompt to switch to 'local' when quota is exceeded."
         }
       }
     }

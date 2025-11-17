@@ -14,6 +14,8 @@ export class ProfileSyncManager {
   private watcher: vscode.FileSystemWatcher | undefined;
   private syncFilePath: string;
   private statusBarManager: SyncStatusBarManager | undefined;
+  private profilesChangedListener: vscode.Disposable | undefined;
+  private isImporting: boolean = false; // Prevent export loops
 
   constructor(context: vscode.ExtensionContext, profileManager: ProfileManager) {
     this.context = context;
@@ -46,7 +48,7 @@ export class ProfileSyncManager {
     // Export current profiles to sync file
     await this.exportToSyncFile();
 
-    // Watch for changes to the sync file
+    // Watch for changes to the sync file (for imports from browser extension)
     this.watcher = vscode.workspace.createFileSystemWatcher(this.syncFilePath);
 
     this.watcher.onDidChange(async () => {
@@ -55,8 +57,18 @@ export class ProfileSyncManager {
 
     this.context.subscriptions.push(this.watcher);
 
+    // Listen for profile changes and auto-export (for changes in VSCode)
+    this.profilesChangedListener = this.profileManager.onProfilesChanged(async () => {
+      // Only export if we're not currently importing (to prevent loops)
+      if (!this.isImporting) {
+        await this.exportToSyncFile();
+      }
+    });
+
+    this.context.subscriptions.push(this.profilesChangedListener);
+
     vscode.window.showInformationMessage(
-      `Profile sync enabled! Sync file: ${this.syncFilePath}`
+      `✅ Automatic sync enabled! File: ${this.syncFilePath}`
     );
   }
 
@@ -67,6 +79,11 @@ export class ProfileSyncManager {
     if (this.watcher) {
       this.watcher.dispose();
       this.watcher = undefined;
+    }
+
+    if (this.profilesChangedListener) {
+      this.profilesChangedListener.dispose();
+      this.profilesChangedListener = undefined;
     }
 
     vscode.window.showInformationMessage('Profile sync disabled');
@@ -82,7 +99,13 @@ export class ProfileSyncManager {
 
   /**
    * Export profiles to sync file
-   * Uses Chrome extension's native format: {list, activeProfileId}
+   * Uses Chrome extension's native format: {list, activeProfileId, profiles_storage_location}
+   *
+   * Note: The browser extension uses a hybrid storage approach:
+   * - chrome.storage.sync (default, ~8KB limit, cross-device sync)
+   * - chrome.storage.local (fallback, 10MB+, local only)
+   *
+   * The storage location preference is stored separately and synced across devices.
    */
   async exportToSyncFile(): Promise<void> {
     try {
@@ -90,11 +113,16 @@ export class ProfileSyncManager {
 
       const config = await this.profileManager.getProfiles();
 
-      // Use Chrome extension's storage format
-      const syncData = {
+      // Use Chrome extension's storage format with hybrid storage support
+      const syncData: any = {
         list: config.list,
         activeProfileId: config.activeProfileId,
       };
+
+      // Include storage location preference if available (for browser extension compatibility)
+      // The browser extension will use this to determine where to store profiles
+      const storageLocation = this.context.globalState.get<string>('profiles_storage_location', 'sync');
+      syncData.profiles_storage_location = storageLocation;
 
       const json = JSON.stringify(syncData, null, 2);
 
@@ -124,10 +152,13 @@ export class ProfileSyncManager {
 
   /**
    * Import profiles from sync file
-   * Reads Chrome extension's native format: {list, activeProfileId}
+   * Reads Chrome extension's native format: {list, activeProfileId, profiles_storage_location}
+   *
+   * Handles hybrid storage preferences from the browser extension.
    */
   async importFromSyncFile(): Promise<void> {
     try {
+      this.isImporting = true; // Prevent export loop
       this.statusBarManager?.setSyncing();
 
       if (!fs.existsSync(this.syncFilePath)) {
@@ -148,7 +179,12 @@ export class ProfileSyncManager {
       const localConfig = await this.profileManager.getProfiles();
       const newProfiles = [...syncData.list];
 
-      // Update local storage
+      // Store storage location preference if present (from browser extension)
+      if (syncData.profiles_storage_location) {
+        await this.context.globalState.update('profiles_storage_location', syncData.profiles_storage_location);
+      }
+
+      // Update local storage (this will trigger onProfilesChanged, but isImporting flag prevents re-export)
       await this.profileManager.saveProfiles({
         list: newProfiles,
         activeProfileId: syncData.activeProfileId,
@@ -165,6 +201,8 @@ export class ProfileSyncManager {
       this.statusBarManager?.setError();
       vscode.window.showErrorMessage(`❌ Import failed: ${error.message}`);
       throw error;
+    } finally {
+      this.isImporting = false; // Reset flag
     }
   }
 
@@ -230,6 +268,23 @@ export class ProfileSyncManager {
     await config.update('sync.filePath', filePath, vscode.ConfigurationTarget.Global);
 
     vscode.window.showInformationMessage(`Sync file updated: ${filePath}`);
+  }
+
+  /**
+   * Get storage location preference
+   * Used by browser extension for hybrid storage (sync vs local)
+   */
+  getStorageLocation(): string {
+    return this.context.globalState.get<string>('profiles_storage_location', 'sync');
+  }
+
+  /**
+   * Set storage location preference
+   * Preference for browser extension's hybrid storage: 'sync' or 'local'
+   */
+  async setStorageLocation(location: 'sync' | 'local'): Promise<void> {
+    await this.context.globalState.update('profiles_storage_location', location);
+    vscode.window.showInformationMessage(`Storage location preference set to: ${location}`);
   }
 
   /**
@@ -331,10 +386,20 @@ export class ProfileSyncManager {
       }
 
       // Update both local and sync file
-      const mergedConfig = {
+      const mergedConfig: any = {
         list: mergedList,
         activeProfileId,
       };
+
+      // Preserve storage location preference
+      if (syncData.profiles_storage_location) {
+        mergedConfig.profiles_storage_location = syncData.profiles_storage_location;
+        await this.context.globalState.update('profiles_storage_location', syncData.profiles_storage_location);
+      } else {
+        // Use current preference if not in sync file
+        const currentLocation = this.getStorageLocation();
+        mergedConfig.profiles_storage_location = currentLocation;
+      }
 
       await this.profileManager.saveProfiles(mergedConfig);
       fs.writeFileSync(this.syncFilePath, JSON.stringify(mergedConfig, null, 2), 'utf-8');

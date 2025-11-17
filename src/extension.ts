@@ -329,6 +329,41 @@ export async function activate(ctx: vscode.ExtensionContext) {
         }
       }
     ),
+    vscode.commands.registerCommand(
+      'promptiply.setStorageLocation',
+      async () => {
+        const { syncManager: sm } = await loadSyncManager();
+        const currentLocation = sm.getStorageLocation();
+        const selected = await vscode.window.showQuickPick(
+          [
+            {
+              label: '$(cloud) Sync Storage (chrome.storage.sync)',
+              description: 'Cross-device sync, ~8KB limit',
+              detail: 'Recommended for most users. Your profiles will sync across devices.',
+              value: 'sync',
+              picked: currentLocation === 'sync'
+            },
+            {
+              label: '$(database) Local Storage (chrome.storage.local)',
+              description: 'Local only, 10MB+ capacity',
+              detail: 'For users with many or large profiles. No cross-device sync.',
+              value: 'local',
+              picked: currentLocation === 'local'
+            }
+          ],
+          {
+            placeHolder: `Current: ${currentLocation}`,
+            title: 'Browser Extension Storage Location'
+          }
+        );
+
+        if (selected) {
+          await sm.setStorageLocation(selected.value as 'sync' | 'local');
+          // Export to sync file with new preference
+          await sm.exportToSyncFile();
+        }
+      }
+    ),
 
     // Settings commands
     vscode.commands.registerCommand(
