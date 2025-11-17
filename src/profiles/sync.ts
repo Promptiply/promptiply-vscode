@@ -14,6 +14,8 @@ export class ProfileSyncManager {
   private watcher: vscode.FileSystemWatcher | undefined;
   private syncFilePath: string;
   private statusBarManager: SyncStatusBarManager | undefined;
+  private profilesChangedListener: vscode.Disposable | undefined;
+  private isImporting: boolean = false; // Prevent export loops
 
   constructor(context: vscode.ExtensionContext, profileManager: ProfileManager) {
     this.context = context;
@@ -46,7 +48,7 @@ export class ProfileSyncManager {
     // Export current profiles to sync file
     await this.exportToSyncFile();
 
-    // Watch for changes to the sync file
+    // Watch for changes to the sync file (for imports from browser extension)
     this.watcher = vscode.workspace.createFileSystemWatcher(this.syncFilePath);
 
     this.watcher.onDidChange(async () => {
@@ -55,8 +57,18 @@ export class ProfileSyncManager {
 
     this.context.subscriptions.push(this.watcher);
 
+    // Listen for profile changes and auto-export (for changes in VSCode)
+    this.profilesChangedListener = this.profileManager.onProfilesChanged(async () => {
+      // Only export if we're not currently importing (to prevent loops)
+      if (!this.isImporting) {
+        await this.exportToSyncFile();
+      }
+    });
+
+    this.context.subscriptions.push(this.profilesChangedListener);
+
     vscode.window.showInformationMessage(
-      `Profile sync enabled! Sync file: ${this.syncFilePath}`
+      `✅ Automatic sync enabled! File: ${this.syncFilePath}`
     );
   }
 
@@ -67,6 +79,11 @@ export class ProfileSyncManager {
     if (this.watcher) {
       this.watcher.dispose();
       this.watcher = undefined;
+    }
+
+    if (this.profilesChangedListener) {
+      this.profilesChangedListener.dispose();
+      this.profilesChangedListener = undefined;
     }
 
     vscode.window.showInformationMessage('Profile sync disabled');
@@ -141,6 +158,7 @@ export class ProfileSyncManager {
    */
   async importFromSyncFile(): Promise<void> {
     try {
+      this.isImporting = true; // Prevent export loop
       this.statusBarManager?.setSyncing();
 
       if (!fs.existsSync(this.syncFilePath)) {
@@ -166,7 +184,7 @@ export class ProfileSyncManager {
         await this.context.globalState.update('profiles_storage_location', syncData.profiles_storage_location);
       }
 
-      // Update local storage
+      // Update local storage (this will trigger onProfilesChanged, but isImporting flag prevents re-export)
       await this.profileManager.saveProfiles({
         list: newProfiles,
         activeProfileId: syncData.activeProfileId,
@@ -183,6 +201,8 @@ export class ProfileSyncManager {
       this.statusBarManager?.setError();
       vscode.window.showErrorMessage(`❌ Import failed: ${error.message}`);
       throw error;
+    } finally {
+      this.isImporting = false; // Reset flag
     }
   }
 

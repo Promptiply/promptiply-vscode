@@ -1,14 +1,26 @@
 # Quick Sync Setup Guide
 
+## ✅ NEW: Automatic Sync from VSCode!
+
+**VSCode now automatically syncs profiles!** When sync is enabled:
+- ✅ Auto-exports when you change profiles in VSCode
+- ✅ Auto-imports when the sync file changes (from browser extension)
+
 ## VSCode → Browser Extension Sync
 
-### Step 1: Enable Sync in VSCode
+### Step 1: Enable Automatic Sync in VSCode
 
 1. Open Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P`)
 2. Type and select: `Promptiply: Enable Profile Sync`
-3. VSCode will create `~/.promptiply-profiles.json` and export your profiles
+3. VSCode creates `~/.promptiply-profiles.json` and starts auto-sync
 
-### Step 2: Import in Browser Extension
+**That's it!** Now whenever you:
+- Create/edit/delete a profile in VSCode → Automatically exports to sync file
+- Make changes in browser extension → VSCode auto-imports (when file changes)
+
+### Step 2: Initial Import in Browser Extension
+
+(One-time setup - manual for now)
 
 1. Open Chrome/Edge browser
 2. Click Promptiply extension icon → **Options**
@@ -18,30 +30,43 @@
 6. Browse to: `~/.promptiply-profiles.json` (in your home folder)
 7. Choose import mode and click **Import**
 
-### Step 3: Verify Sync
+### Ongoing Sync
 
-- Your VSCode profiles should now appear in the browser extension!
-- The storage location preference (sync/local) will also be imported
+**VSCode → Browser:**
+- Make changes in VSCode → File auto-updates → Manually import in browser
+- (Browser extension auto-import coming soon - see automatic-sync-guide.md)
+
+**Browser → VSCode:**
+- Export from browser to `~/.promptiply-profiles.json` → VSCode **auto-imports** ✅
 
 ---
 
-## Browser Extension → VSCode Sync
+## How It Works Now
 
-### Step 1: Export from Browser Extension
+```
+┌─────────────────┐              ┌──────────────────────┐
+│   VSCode        │              │ Browser Extension    │
+│                 │              │                      │
+│  Create/Edit/   │              │  Create/Edit/        │
+│  Delete Profile │              │  Delete Profile      │
+│       ↓         │              │       ↓              │
+│  AUTO-EXPORT ✅ │              │  Manual Export ⚠️    │
+└────────┬────────┘              └──────┬───────────────┘
+         │                              │
+         └──────────►┌─────────────────┐◄
+                     │  Sync File      │
+         ┌───────────┤ ~/.promptiply   │
+         │           │  -profiles.json │
+         ▼           └─────────────────┘
+    AUTO-IMPORT ✅
+                                Manual Import ⚠️
+```
 
-1. Open Promptiply Options in browser
-2. Go to **Profiles** tab
-3. Click **Export Profiles**
-4. ✅ Check **"Export for VSCode Sync"**
-5. Save as: `~/.promptiply-profiles.json`
-
-### Step 2: Import in VSCode
-
-**If sync is enabled:** VSCode will auto-detect and import
-
-**If sync is disabled:**
-1. Command Palette → `Promptiply: Sync Profiles Now`
-2. Select **Import from Sync File**
+### What's Automatic
+- ✅ VSCode export (on any profile change)
+- ✅ VSCode import (when file changes)
+- ⚠️ Browser export (manual - you export when needed)
+- ⚠️ Browser import (manual - you import when needed)
 
 ---
 
