@@ -2,18 +2,21 @@
 
 All notable changes to the "Promptiply" extension will be documented in this file.
 
-## [Unreleased]
+## [0.5.1] - 2025-01-17
 
-### 🔧 Quality Improvements (v0.5.1 Upcoming)
+### 🔧 Quality & Security Improvements
 
 - **Security**: Fixed 5 HIGH severity vulnerabilities in glob dependency
   - Updated glob to 11.1.0 via npm overrides
-  - All dependencies now vulnerability-free
+  - All dependencies now vulnerability-free (`npm audit` shows 0 issues)
 - **Testing**: Added comprehensive test suite for API resilience utilities
   - Full coverage of fetchWithResilience (timeout, retry, exponential backoff)
   - Complete RateLimiter tests (throttling, edge cases)
   - 400+ lines of new test coverage
 - **Compatibility**: Fixed RefinementEngine constructor for Secrets API integration
+- **Code Quality**: Fixed 4 ESLint warnings for UI dialog labels
+  - Reduced total warnings from 78 to 74
+  - Remaining warnings are intentional (external API fields, enum members)
 
 ## [0.5.0] - 2025-01-17
 
