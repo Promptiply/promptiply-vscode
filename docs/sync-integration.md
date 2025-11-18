@@ -45,7 +45,7 @@ Both extensions use a unified sync file format:
 }
 ```
 
-**New in v0.5.0:** The `profiles_storage_location` field supports the browser extension's hybrid storage approach:
+**New in v0.5.1:** The `profiles_storage_location` field supports the browser extension's hybrid storage approach:
 - `"sync"` - Uses `chrome.storage.sync` (cross-device sync, ~8KB limit)
 - `"local"` - Uses `chrome.storage.local` (local only, 10MB+ capacity)
 
@@ -97,7 +97,7 @@ When sync is enabled, VSCode watches the sync file for changes:
 
 ### 5. Storage Location Preference (Browser Extension)
 
-**New in v0.5.0:** Set the storage location preference for the browser extension:
+**New in v0.5.1:** Set the storage location preference for the browser extension:
 
 **Via Command Palette:**
 1. Open Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`)
@@ -114,7 +114,7 @@ This preference is automatically synced to the browser extension when you export
 
 ### Hybrid Storage Approach
 
-**New in v0.5.0:** The browser extension uses a hybrid storage system:
+**New in v0.5.1:** The browser extension uses a hybrid storage system:
 - **Default:** `chrome.storage.sync` - Your profiles sync across all your Chrome browsers
 - **Fallback:** `chrome.storage.local` - Used automatically when you have many or large profiles
 

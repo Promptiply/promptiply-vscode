@@ -4,12 +4,12 @@ This document provides guidance for upgrading between major versions of Promptip
 
 ## Table of Contents
 
-- [Upgrading to v0.5.0](#upgrading-to-v050)
+- [Upgrading to v0.5.1](#upgrading-to-v051)
 - [General Migration Tips](#general-migration-tips)
 
 ---
 
-## Upgrading to v0.5.0
+## Upgrading to v0.5.1
 
 **Release Date:** TBD
 **Breaking Changes:** Yes (AI model configuration)
@@ -46,7 +46,7 @@ The default AI model names have been corrected to match actual provider offering
 }
 ```
 
-**After (v0.5.0):**
+**After (v0.5.1):**
 ```jsonc
 {
   "promptiply.openai.economyModel": "gpt-4o-mini",              // ✅ Correct
@@ -195,7 +195,7 @@ If you encounter problems during migration:
 
 | Promptiply Version | VSCode Version | Node Version | Status |
 |-------------------|----------------|--------------|--------|
-| 0.5.0 | >= 1.85.0 | 18.x, 20.x, 22.x | Current |
+| 0.5.1 | >= 1.85.0 | 18.x, 20.x, 22.x | Current |
 | 0.0.1 | >= 1.85.0 | 18.x, 20.x | Legacy |
 
 ---
@@ -206,14 +206,14 @@ If you encounter problems during migration:
 
 | Promptiply Version | Supported Models |
 |-------------------|------------------|
-| 0.5.0 | gpt-4o, gpt-4o-mini, gpt-4-turbo, gpt-3.5-turbo |
+| 0.5.1 | gpt-4o, gpt-4o-mini, gpt-4-turbo, gpt-3.5-turbo |
 | 0.0.1 | gpt-4o, gpt-4o-mini (configured as "gpt-5") |
 
 ### Anthropic
 
 | Promptiply Version | Supported Models |
 |-------------------|------------------|
-| 0.5.0 | claude-3-5-sonnet-20241022, claude-3-5-haiku-20241022, claude-3-opus |
+| 0.5.1 | claude-3-5-sonnet-20241022, claude-3-5-haiku-20241022, claude-3-opus |
 | 0.0.1 | claude-3-5-sonnet, claude-3-5-haiku (configured incorrectly) |
 
 ### VSCode LM

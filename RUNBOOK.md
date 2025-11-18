@@ -71,8 +71,8 @@ The GitHub Actions workflow automatically:
 
 **Trigger a Release:**
 ```bash
-git tag v0.5.0
-git push origin v0.5.0
+git tag v0.5.1
+git push origin v0.5.1
 ```
 
 ---
@@ -400,7 +400,7 @@ cp ~/backups/storage.json ~/.vscode/globalState/
 
 | Version | Date | Changes |
 |---------|------|---------|
-| 0.5.0 | TBD | Added resilience, coverage, security improvements |
+| 0.5.1 | TBD | Added resilience, coverage, security improvements |
 | 0.0.1 | Initial | Initial release |
 
 ---

@@ -153,7 +153,7 @@ constructor(profileManager: ProfileManager, secretsManager?: any) {
 ## 📦 Files Changed Summary
 
 ### Modified Files (4)
-1. `package.json` - Added glob override, version stays at 0.5.0
+1. `package.json` - Added glob override, updated to version 0.5.1
 2. `package-lock.json` - Updated dependencies with safe versions
 3. `src/refinement/engine.ts` - Added optional secretsManager parameter
 4. `CHANGELOG.md` - Added v0.5.1 unreleased section
