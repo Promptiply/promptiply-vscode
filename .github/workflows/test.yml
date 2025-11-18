@@ -1,4 +1,4 @@
-name: Automated Tests
+name: Tests
 
 on:
   push:
@@ -7,32 +7,111 @@ on:
     branches: [ main, develop ]
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  automated-tests:
+  lint:
+    name: Lint & Security
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linter
+        run: npm run lint
+
+      - name: Security audit
+        run: npm audit --audit-level=high
+
+  test:
+    name: Test (${{ matrix.os }}, Node ${{ matrix.node-version }})
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
+        node-version: [18.x, 20.x, 22.x]
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v5
+      - name: Checkout code
+        uses: actions/checkout@v5
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v6
-      with:
-        node-version: '20.x'
-        cache: 'npm'
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
 
-    - name: Install dependencies
-      run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-    - name: Run linter
-      run: npm run lint
+      - name: Compile TypeScript
+        run: npm run compile-tests
 
-    - name: Compile TypeScript
-      run: npm run compile-tests
+      - name: Compile extension
+        run: npm run compile
 
-    - name: Run tests
-      uses: coactions/setup-xvfb@v1
-      with:
+      - name: Run tests with coverage (Linux + Node 20)
+        if: runner.os == 'Linux' && matrix.node-version == '20.x'
+        uses: coactions/setup-xvfb@v1
+        with:
+          run: npm run test:coverage
+
+      - name: Run tests (Linux, other Node versions)
+        if: runner.os == 'Linux' && matrix.node-version != '20.x'
+        uses: coactions/setup-xvfb@v1
+        with:
+          run: npm test
+
+      - name: Run tests (Windows/macOS)
+        if: runner.os != 'Linux'
         run: npm test
+
+      - name: Upload coverage reports
+        if: matrix.os == 'ubuntu-latest' && matrix.node-version == '20.x'
+        uses: codecov/codecov-action@v5
+        with:
+          files: ./coverage/lcov.info
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+
+      - name: Run sync tests
+        run: node test-sync.js
+
+  build:
+    name: Build & Package
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Package extension
+        run: npm run package
+
+      - name: Upload VSIX artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: vsix-package
+          path: '*.vsix'
+          retention-days: 7
