@@ -292,6 +292,7 @@ export class TemplateCommands {
       const uris = await vscode.window.showOpenDialog({
         canSelectFiles: true,
         canSelectMany: false,
+        // eslint-disable-next-line @typescript-eslint/naming-convention
         filters: { JSON: ['json'] },
         title: 'Import Templates',
       });
@@ -318,6 +319,7 @@ export class TemplateCommands {
       const json = await this.templateManager.export();
 
       const uri = await vscode.window.showSaveDialog({
+        // eslint-disable-next-line @typescript-eslint/naming-convention
         filters: { JSON: ['json'] },
         defaultUri: vscode.Uri.file('promptiply-templates.json'),
         title: 'Export Templates',

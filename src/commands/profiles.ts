@@ -64,6 +64,7 @@ export class ProfileCommands {
       canSelectFolders: false,
       canSelectMany: false,
       filters: {
+        // eslint-disable-next-line @typescript-eslint/naming-convention
         'JSON Files': ['json'],
       },
       title: 'Select profile export file',
@@ -96,6 +97,7 @@ export class ProfileCommands {
 
       const uri = await vscode.window.showSaveDialog({
         filters: {
+          // eslint-disable-next-line @typescript-eslint/naming-convention
           'JSON Files': ['json'],
         },
         defaultUri: vscode.Uri.file('promptiply-profiles.json'),
