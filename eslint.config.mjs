@@ -12,12 +12,12 @@ export default tseslint.config(
       'eqeqeq': 'warn',
       'no-throw-literal': 'warn',
 
-      // Relax new strict rules to warnings to match old behavior
-      '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-unused-vars': 'off',
-      '@typescript-eslint/no-require-imports': 'off',
-      'no-case-declarations': 'off',
-      'prefer-const': 'off'
+      // Gradually tighten rules - warn now, enforce later
+      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-require-imports': 'warn',
+      'no-case-declarations': 'warn',
+      'prefer-const': 'warn'
     },
     languageOptions: {
       parserOptions: {

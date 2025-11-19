@@ -2,7 +2,7 @@
   "name": "promptiply",
   "displayName": "Promptiply",
   "description": "Refine your AI prompts for better results with Copilot, Claude Code, and more. Supports customizable profiles with smart topic tracking.",
-  "version": "0.0.1",
+  "version": "0.6.0",
   "publisher": "promptiply",
   "icon": "media/icon.png",
   "license": "GPL-3.0",
@@ -471,6 +471,13 @@
             "Use chrome.storage.local (local only, 10MB+ capacity) - For users with many or large profiles"
           ],
           "description": "Storage location preference for browser extension. The browser extension will automatically prompt to switch to 'local' when quota is exceeded."
+        },
+        "promptiply.sync.serverPort": {
+          "type": "number",
+          "default": 3456,
+          "minimum": 1024,
+          "maximum": 65535,
+          "description": "Local HTTP sync server port for browser extension communication"
         }
       }
     }

@@ -160,12 +160,12 @@ Open Settings (`Cmd/Ctrl+,`) and search for "Promptiply":
   "promptiply.ollama.premiumModel": "llama3.1:8b",
 
   // OpenAI API settings (pay-per-use)
-  "promptiply.openai.apiKey": "sk-...",  // Get from https://platform.openai.com/api-keys
+  // API key: Use Command Palette > "Promptiply: Set OpenAI API Key (Secure)"
   "promptiply.openai.economyModel": "gpt-5-mini",         // GPT-5 Mini (fast and cost-effective)
   "promptiply.openai.premiumModel": "gpt-5-2025-08-07",   // GPT-5 (flagship model)
 
   // Anthropic API settings (pay-per-use)
-  "promptiply.anthropic.apiKey": "sk-ant-...",  // Get from https://console.anthropic.com/
+  // API key: Use Command Palette > "Promptiply: Set Anthropic API Key (Secure)"
   "promptiply.anthropic.economyModel": "claude-haiku-4-5",  // ~$1/1M tokens
   "promptiply.anthropic.premiumModel": "claude-sonnet-4-5", // ~$3/1M tokens
 
@@ -177,21 +177,25 @@ Open Settings (`Cmd/Ctrl+,`) and search for "Promptiply":
 }
 ```
 
-### 🔑 Adding API Keys
+### 🔑 Adding API Keys (Secure Storage)
 
 **OpenAI:**
 1. Visit https://platform.openai.com/api-keys
 2. Create a new API key
-3. Add to settings: `"promptiply.openai.apiKey": "sk-..."`
-4. Set mode: `"promptiply.mode": "openai-api"`
+3. Open Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`)
+4. Run: `Promptiply: Set OpenAI API Key (Secure)`
+5. Enter your API key when prompted
+6. Set mode: `"promptiply.mode": "openai-api"`
 
 **Anthropic:**
 1. Visit https://console.anthropic.com/
 2. Create a new API key
-3. Add to settings: `"promptiply.anthropic.apiKey": "sk-ant-..."`
-4. Set mode: `"promptiply.mode": "anthropic-api"`
+3. Open Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`)
+4. Run: `Promptiply: Set Anthropic API Key (Secure)`
+5. Enter your API key when prompted
+6. Set mode: `"promptiply.mode": "anthropic-api"`
 
-**Note:** API keys are stored in VSCode settings. For better security, consider using environment variables or VSCode secrets API in future versions.
+**Security Note:** API keys are stored securely using VSCode's Secrets API (encrypted, machine-local storage). Keys are **never synced** across devices for security. If you previously stored keys in settings.json, they will be automatically migrated to secure storage.
 
 ## 🎮 Commands
 
